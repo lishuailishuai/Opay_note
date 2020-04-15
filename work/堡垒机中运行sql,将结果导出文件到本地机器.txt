@@ -1,0 +1,78 @@
+
+在HUE上执行SQL，如果报错：
+Error while processing statement: FAILED: Execution Error, return code 2 from org.apache.hadoop.hive.ql.exec.mr.MapRedTask
+需要到堡垒机上去执行SQL
+
+需求：把这个两个SQL 数据导出到本地，导出文本形式      在堡垒机上执行，会导出到本地，也就是堡垒机上的本地，然后还需要将堡垒机上的本地文件传输到我的电脑上的本地。
+
+
+https://blog.csdn.net/u014788838/article/details/87926151  安装，使用sz命令，将堡垒机上的本地文件传输到我的电脑上的本地
+
+
+select
+get_json_object(event_value, '$.order_id') as order_id,
+get_json_object(event_value, '$.lng') as lng,
+get_json_object(event_value, '$.lat') as lat,
+get_json_object(event_value, '$.city_id') as city_id
+from
+oride_dw. dwd_oride_client_event_detail_hi
+where
+ dt between'2019-10-27'and'2019-11-28'
+ and event_name= 'start_ride_sliding_arrived';
+=====================================================
+ select
+get_json_object(event_value, '$.order_id') as order_id,
+get_json_object(event_value, '$.lng') as lng,
+get_json_object(event_value, '$.lat') as lat,
+get_json_object(event_value, '$.city_id') as city_id
+from
+oride_dw. dwd_oride_client_event_detail_hi
+where
+ dt between'2019-10-27'and'2019-11-28'
+ and event_name= 'start_ride_sliding';
+
+
+下面：在堡垒机上执行
+
+第一种：
+hive -e "
+insert overwrite local directory '/root/shuai/aa'
+row format delimited fields terminated by '\t'
+select
+get_json_object(event_value, '$.order_id') as order_id,
+get_json_object(event_value, '$.lng') as lng,
+get_json_object(event_value, '$.lat') as lat,
+get_json_object(event_value, '$.city_id') as city_id
+from
+oride_dw.dwd_oride_client_event_detail_hi
+where
+ dt between'2019-10-27'and'2019-11-28'
+ and event_name= 'start_ride_sliding_arrived'
+ "
+在堡垒机上的本地目录aa中会生成很多小文件，还需要进行合并
+
+hadoop fs -getmerge /root/shuai/aa first.txt
+
+第二种：
+
+hive -e "
+select
+get_json_object(event_value, '$.order_id') as order_id,
+get_json_object(event_value, '$.lng') as lng,
+get_json_object(event_value, '$.lat') as lat,
+get_json_object(event_value, '$.city_id') as city_id
+from
+oride_dw.dwd_oride_client_event_detail_hi
+where
+ dt between'2019-10-27'and'2019-11-28'
+ and event_name= 'start_ride_sliding'" > first.csv
+
+
+文件会生成在当前目录中，而且必须是csv。不能是txt
+
+也可以写脚本，脚本内容就是上面，一样
+
+csv 默认点分割
+最后可以改成xlsx,txt，就变成\t分隔了。
+
+

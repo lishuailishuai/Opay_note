@@ -1,0 +1,258 @@
+
+---当前整体逾期情况-放款月份
+
+SET mapreduce.job.queuename=root.data_bi;
+select
+case when main.loan_month is not null then main.loan_month else '合计' end  as `放款月份`,
+round(sum(case when t2.order_id is not null then main.loan_amount*0.2712/100 else null end),2) as `贷款金额USD_到期`,
+count(DISTINCT case when t2.order_id is not null then t2.order_id else null end) as `放款件数_到期`,
+count(DISTINCT case when t2.overdue_days >0 then t2.order_id else null end) as `逾期件数`,
+count(DISTINCT case when t2.overdue_days between 1 and 7 then t2.order_id else null end) as `1-7DPD`,
+count(DISTINCT case when t2.overdue_days between 8 and 15 then t2.order_id else null end) as `8-15DPD`,
+count(DISTINCT case when t2.overdue_days between 16 and 30 then t2.order_id else null end) as `16-30DPD`,
+count(DISTINCT case when t2.overdue_days >30 then t2.order_id else null end) as `逾期30+天件数`,
+concat(round(count(DISTINCT case when t2.overdue_days >0 then t2.order_id else null end)/count(DISTINCT case when t2.order_id is not null then t2.order_id else null end)*100,2),'%') as `现存0+逾期率`,
+concat(round(count(DISTINCT case when t2.overdue_days >7 then t2.order_id else null end)/count(DISTINCT case when t2.order_id is not null then t2.order_id else null end)*100,2),'%') as `现存7+逾期率`,
+concat(round(count(DISTINCT case when t2.overdue_days >15 then t2.order_id else null end)/count(DISTINCT case when t2.order_id is not null then t2.order_id else null end)*100,2),'%') as `现存15+逾期率`,
+concat(round(count(DISTINCT case when t2.overdue_days >30 then t2.order_id else null end)/count(DISTINCT case when t2.order_id is not null then t2.order_id else null end)*100,2),'%') as `现存30+逾期率`,
+concat(round(count(DISTINCT case when t3.overdue_days >0 then t3.order_id else null end)/count(DISTINCT case when t3.fzrq > 0 then t3.order_id end)*100,2),'%') as `FPD0+流入率`,
+concat(round(count(DISTINCT case when t3.overdue_days >7 then t3.order_id else null end)/count(DISTINCT case when t3.fzrq > 7 then t3.order_id end)*100,2),'%') as `FPD7+流入率`,
+concat(round(count(DISTINCT case when t3.overdue_days >15 then t3.order_id else null end)/count(DISTINCT case when t3.fzrq > 15 then t3.order_id end)*100,2),'%') as `FPD15+流入率`,
+concat(round(count(DISTINCT case when t3.overdue_days >30 then t3.order_id else null end)/count(DISTINCT case when t3.fzrq > 30 then t3.order_id end)*100,2),'%') as `FPD30+流入率`
+
+from
+(
+select
+order_id,
+user_id,
+order_status,
+pay_status,
+payment_status,
+product_name,
+(case when product_type='1' then '自营' when product_type='2' then '合作商' else null end) as product_type,
+(case when order_id='012020011001240073' then '2020-01-04' else to_date(loan_time) end) as loan_time,
+substr((case when order_id='012020011001240073' then '2020-01-04' else to_date(loan_time) end),1,7) as loan_month,
+terms as total_period_no,
+down_payment/100 as down_payment,
+loan_amount/100 as loan_amount,
+date_sub(current_date(),1) as jzrq,
+add_months(date_sub(current_date(),1),-1) as dqrq
+from ocredit_phones_dw_ods.ods_sqoop_base_t_order_df
+where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+and date_add(from_unixtime(unix_timestamp(create_time)+3600,'yyyy-MM-dd'),0)>='2019-12-28'
+and business_type='0'
+and order_status='81' and loan_time is not null
+and user_id not in
+(
+'1209783514507214849',
+'1209126038292123650',
+'1210903150317494274',
+'1214471918163460097',
+'1215642304343425026',
+'1226878328587288578')
+
+)main
+
+left join
+(select
+t1.order_id,max(t1.overdue_days) as overdue_days,
+count(t1.period_no) as due_period_no,
+count(case when t1.plan_status='OEVERDUE' then t1.period_no else null end) as overdue_period_no,
+count(case when t1.plan_status='PERMANENT' then t1.period_no else null end) as fact_period_no,
+sum(t1.due_total_amount) as due_total_amount,
+sum(t1.due_capital_amount) as due_capital_amount,
+sum(case when t1.plan_status='PERMANENT' then t1.fact_total_amount else null end) as fact_total_amount,
+sum(case when t1.plan_status='PERMANENT' then t1.fact_capital_amount else null end) as fact_capital_amount,
+sum(case when t1.plan_status='OEVERDUE' then t1.due_total_amount else null end) as overdue_total_amount,
+sum(case when t1.plan_status='OEVERDUE' then t1.due_capital_amount else null end) as overdue_capital_amount
+from
+(select
+order_id,
+user_id,
+contract_id,
+current_period as period_no,
+to_date(repayment_time) as due_tm,
+month_total_amount  as due_total_amount,
+month_amount as due_capital_amount,
+to_date(real_repayment_time) as fact_tm,
+real_total_amount as fact_total_amount,
+real_amount as fact_capital_amount,
+current_repayment_status as repayment_status,
+case when current_repayment_status='3' then 'PERMANENT' else 'OVERDUE' end as plan_status,
+case when current_repayment_status='3' then 0 else datediff(current_date(),to_date(repayment_time)) end as overdue_days
+from  ocredit_phones_dw_ods.ods_sqoop_base_t_repayment_detail_df
+where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+and business_type = '0'
+and to_date(repayment_time) <= date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+)t1 group by t1.order_id
+)t2 on main.order_id=t2.order_id
+
+left join
+(
+select
+date_sub(current_date(),1) as jzrq,
+datediff(current_date(),to_date(date(repayment_time))) as fzrq,
+order_id,
+user_id,
+contract_id,
+current_period as period_no,
+date(repayment_time) as due_tm,
+month_total_amount  as due_total_amount,
+month_amount as due_capital_amount,
+poundage as  due_poundage_amount,
+current_interest_rate as current_interest_rate,
+real_repayment_time as fact_tm,
+real_total_amount as fact_total_amount,
+real_amount as fact_capital_amount,
+real_service_fee as  fact_service_amount,
+real_interest as fact_interest_amount,
+real_poundage as fact_poundage_amount,
+real_penalty_interest as fact_penalty_amount,
+current_repayment_status as repayment_status,
+(case  
+     when current_repayment_status in ('3') and datediff(to_date(real_repayment_time),to_date(repayment_time))>0 then 'OVERDUE_CLEARED'
+     when current_repayment_status in ('3') and datediff(to_date(real_repayment_time),to_date(repayment_time))<=0 then 'CLEARED'
+     else 'OVERDUE' end) as plan_status,
+(case  
+     when current_repayment_status in ('3') and datediff(to_date(real_repayment_time),to_date(repayment_time))>0 then datediff(to_date(real_repayment_time),to_date(repayment_time))
+     when current_repayment_status in ('3') and datediff(to_date(real_repayment_time),to_date(repayment_time))<=0 then 0
+     else datediff(current_date(),to_date(repayment_time)) end) as overdue_days
+from  ocredit_phones_dw_ods.ods_sqoop_base_t_repayment_detail_df
+where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+and business_type = '0'
+and to_date(repayment_time) <= date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+and current_period='1'
+)t3 on main.order_id=t3.order_id
+where t2.order_id is not null
+group by main.loan_month
+with rollup
+order by `放款月份`
+
+---当前整体逾期情况-商户
+
+SET mapreduce.job.queuename=root.data_bi;
+select
+case when main.merchant_name is not null then main.merchant_name else '合计' end  as `商户`,
+round(sum(case when t2.order_id is not null then main.loan_amount*0.2712/100 else null end),2) as `贷款金额USD_到期`,
+count(DISTINCT case when t2.order_id is not null then t2.order_id else null end) as `放款件数_到期`,
+count(DISTINCT case when t2.overdue_days >0 then t2.order_id else null end) as `逾期件数`,
+count(DISTINCT case when t2.overdue_days between 1 and 7 then t2.order_id else null end) as `1-7DPD`,
+count(DISTINCT case when t2.overdue_days between 8 and 15 then t2.order_id else null end) as `8-15DPD`,
+count(DISTINCT case when t2.overdue_days between 16 and 30 then t2.order_id else null end) as `16-30DPD`,
+count(DISTINCT case when t2.overdue_days >30 then t2.order_id else null end) as `逾期30+天件数`,
+concat(round(count(DISTINCT case when t2.overdue_days >0 then t2.order_id else null end)/count(DISTINCT case when t2.order_id is not null then t2.order_id else null end)*100,2),'%') as `现存0+逾期率`,
+concat(round(count(DISTINCT case when t2.overdue_days >7 then t2.order_id else null end)/count(DISTINCT case when t2.order_id is not null then t2.order_id else null end)*100,2),'%') as `现存7+逾期率`,
+concat(round(count(DISTINCT case when t2.overdue_days >15 then t2.order_id else null end)/count(DISTINCT case when t2.order_id is not null then t2.order_id else null end)*100,2),'%') as `现存15+逾期率`,
+concat(round(count(DISTINCT case when t2.overdue_days >30 then t2.order_id else null end)/count(DISTINCT case when t2.order_id is not null then t2.order_id else null end)*100,2),'%') as `现存30+逾期率`,
+concat(round(count(DISTINCT case when t3.overdue_days >0 then t3.order_id else null end)/count(DISTINCT case when t3.fzrq > 0 then t3.order_id end)*100,2),'%') as `FPD0+流入率`,
+concat(round(count(DISTINCT case when t3.overdue_days >7 then t3.order_id else null end)/count(DISTINCT case when t3.fzrq > 7 then t3.order_id end)*100,2),'%') as `FPD7+流入率`,
+concat(round(count(DISTINCT case when t3.overdue_days >15 then t3.order_id else null end)/count(DISTINCT case when t3.fzrq > 15 then t3.order_id end)*100,2),'%') as `FPD15+流入率`,
+concat(round(count(DISTINCT case when t3.overdue_days >30 then t3.order_id else null end)/count(DISTINCT case when t3.fzrq > 30 then t3.order_id end)*100,2),'%') as `FPD30+流入率`
+
+from
+(
+select
+order_id,
+user_id,
+order_status,
+pay_status,
+payment_status,
+product_name,merchant_name,
+(case when product_type='1' then '自营' when product_type='2' then '合作商' else null end) as product_type,
+(case when order_id='012020011001240073' then '2020-01-04' else to_date(loan_time) end) as loan_time,
+substr((case when order_id='012020011001240073' then '2020-01-04' else to_date(loan_time) end),1,7) as loan_month,
+terms as total_period_no,
+down_payment/100 as down_payment,
+loan_amount/100 as loan_amount,
+date_sub(current_date(),1) as jzrq,
+add_months(date_sub(current_date(),1),-1) as dqrq
+from ocredit_phones_dw_ods.ods_sqoop_base_t_order_df
+where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+and date_add(from_unixtime(unix_timestamp(create_time)+3600,'yyyy-MM-dd'),0)>='2019-12-28'
+and business_type='0'
+and order_status='81' and loan_time is not null
+and user_id not in
+(
+'1209783514507214849',
+'1209126038292123650',
+'1210903150317494274',
+'1214471918163460097',
+'1215642304343425026',
+'1226878328587288578')
+
+)main
+
+left join
+(select
+t1.order_id,max(t1.overdue_days) as overdue_days,
+count(t1.period_no) as due_period_no,
+count(case when t1.plan_status='OEVERDUE' then t1.period_no else null end) as overdue_period_no,
+count(case when t1.plan_status='PERMANENT' then t1.period_no else null end) as fact_period_no,
+sum(t1.due_total_amount) as due_total_amount,
+sum(t1.due_capital_amount) as due_capital_amount,
+sum(case when t1.plan_status='PERMANENT' then t1.fact_total_amount else null end) as fact_total_amount,
+sum(case when t1.plan_status='PERMANENT' then t1.fact_capital_amount else null end) as fact_capital_amount,
+sum(case when t1.plan_status='OEVERDUE' then t1.due_total_amount else null end) as overdue_total_amount,
+sum(case when t1.plan_status='OEVERDUE' then t1.due_capital_amount else null end) as overdue_capital_amount
+from
+(select
+order_id,
+user_id,
+contract_id,
+current_period as period_no,
+to_date(repayment_time) as due_tm,
+month_total_amount  as due_total_amount,
+month_amount as due_capital_amount,
+to_date(real_repayment_time) as fact_tm,
+real_total_amount as fact_total_amount,
+real_amount as fact_capital_amount,
+current_repayment_status as repayment_status,
+case when current_repayment_status='3' then 'PERMANENT' else 'OVERDUE' end as plan_status,
+case when current_repayment_status='3' then 0 else datediff(current_date(),to_date(repayment_time)) end as overdue_days
+from  ocredit_phones_dw_ods.ods_sqoop_base_t_repayment_detail_df
+where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+and business_type = '0'
+and to_date(repayment_time) <= date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+)t1 group by t1.order_id
+)t2 on main.order_id=t2.order_id
+
+left join
+(
+select
+date_sub(current_date(),1) as jzrq,
+datediff(current_date(),to_date(date(repayment_time))) as fzrq,
+order_id,
+user_id,
+contract_id,
+current_period as period_no,
+date(repayment_time) as due_tm,
+month_total_amount  as due_total_amount,
+month_amount as due_capital_amount,
+poundage as  due_poundage_amount,
+current_interest_rate as current_interest_rate,
+real_repayment_time as fact_tm,
+real_total_amount as fact_total_amount,
+real_amount as fact_capital_amount,
+real_service_fee as  fact_service_amount,
+real_interest as fact_interest_amount,
+real_poundage as fact_poundage_amount,
+real_penalty_interest as fact_penalty_amount,
+current_repayment_status as repayment_status,
+(case  
+     when current_repayment_status in ('3') and datediff(to_date(real_repayment_time),to_date(repayment_time))>0 then 'OVERDUE_CLEARED'
+     when current_repayment_status in ('3') and datediff(to_date(real_repayment_time),to_date(repayment_time))<=0 then 'CLEARED'
+     else 'OVERDUE' end) as plan_status,
+(case  
+     when current_repayment_status in ('3') and datediff(to_date(real_repayment_time),to_date(repayment_time))>0 then datediff(to_date(real_repayment_time),to_date(repayment_time))
+     when current_repayment_status in ('3') and datediff(to_date(real_repayment_time),to_date(repayment_time))<=0 then 0
+     else datediff(current_date(),to_date(repayment_time)) end) as overdue_days
+from  ocredit_phones_dw_ods.ods_sqoop_base_t_repayment_detail_df
+where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+and business_type = '0'
+and to_date(repayment_time) <= date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+and current_period='1'
+)t3 on main.order_id=t3.order_id
+where t2.order_id is not null
+group by main.merchant_name
+with rollup
+order by `放款件数_到期` desc

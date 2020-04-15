@@ -1,0 +1,125 @@
+
+
+
+
+SHOW PARTITIONS FROM table [ WHERE ... ] [ ORDER BY ... ] [ LIMIT ... ]
+
+
+
+
+========
+
+select a.user_id,a.role,
+case 
+when a.role='customer' and b.role=null then lag(b.upgrade_date,1,'9999-01-01 00:00:00') over(distribute by b.user_id sort by b.upgrade_date)
+when a.role='customer' and b.role='agent' and b.upgrade_status='upgraded' and b.upgrade_type='2'
+then b.upgrade_date
+when a.role='agent' and b.role='agent' and b.upgrade_status='upgraded' and b.upgrade_type='2'
+then b.upgrade_date
+else a.create_time
+end agent_upgrade_time,
+a.dt
+from
+opay_dw_ods.ods_sqoop_base_user_di a
+left join
+opay_dw_ods.ods_sqoop_base_user_upgrade_df b
+on a.user_id=b.user_id;
+
+
+
+select * from opay_dw_ods.ods_sqoop_base_user_di where user_id='156619082743519500'
+
+select * from opay_dw_ods.ods_sqoop_base_user_di limit 100
+
+
+show partitions dwd_oride_order_base_include_test_di
+select dt from ods_sqoop_base_data_user_df limit 10
+
+
+
+
+
+
+
+
+
+
+
+
+
+==================================ttt
+
+select * from ofood_dw_ods.ods_sqoop_base_jh_order_df limit 2
+
+
+ofood_dw_ods.ods_sqoop_base_jh_order_df 
+ofood_dw_ods.ods_sqoop_base_jh_order_log_df 
+
+1.
+select a.dt,count(distinct uid)
+from
+(
+select *
+from_unixtime(min(dateline),'yyyy-MM-dd') line
+from
+ofood_dw_ods.ods_sqoop_base_jh_order_df
+where dt<'2019-10-01' and order_status=8
+group by uid
+) a
+where a.line=a.dt and a.dt>='2019-09-01'
+group by a.dt
+
+
+1
+select count(distinct uid) from
+ofood_dw_ods.ods_sqoop_base_jh_order_df 
+where order_status=8
+group by min(dateline)
+
+select * from ofood_dw_ods.ods_sqoop_base_jh_order_log_df limit 100
+
+select max(dateline) from ofood_dw_ods.ods_sqoop_base_jh_order_df 
+
+select *
+from ofood_dw_ods.ods_sqoop_base_jh_order_df
+where date_format(dt,'yyyy-MM')='2019-09';
+
+2
+select origin.dt,count(distinct origin.order_id) from
+(
+select *
+from ofood_dw_ods.ods_sqoop_base_jh_order_df
+where order_status<0 and pay_status!=0 
+) origin
+join
+(
+select *
+from ofood_dw_ods.ods_sqoop_base_jh_order_log_df
+where 'from'='shop' and status=-1 
+) logg
+on origin.order_id=logg.order_id
+group by origin.dt
+having date_format(dt,'yyyy-MM')='2019-09';
+
+
+select dt
+from ofood_dw_ods.ods_sqoop_base_jh_order_log_df
+where 'from'='shop' and status=-1 
+group by dt
+
+
+select * from ofood_dw_ods.ods_sqoop_base_jh_order_df where dateline!=0  limit 100
+
+
+select * from ofood_dw_ods.ods_sqoop_base_jh_order_df limit 1
+
+
+
+
+
+
+
+
+
+
+

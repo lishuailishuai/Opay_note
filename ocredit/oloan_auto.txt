@@ -1,0 +1,238 @@
+/*
+ Navicat Premium Data Transfer
+
+ Source Server         : Oloan
+ Source Server Type    : MySQL
+ Source Server Version : 50712
+ Source Host           : oloan-prod-slave-dw.cdpm388ickiy.eu-west-1.rds.amazonaws.com:3306
+ Source Schema         : oloan_auto
+
+ Target Server Type    : MySQL
+ Target Server Version : 50712
+ File Encoding         : 65001
+
+ Date: 03/02/2020 14:20:14
+*/
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for t_clue
+-- ----------------------------
+DROP TABLE IF EXISTS `t_clue`;
+CREATE TABLE `t_clue`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` bigint(20) NULL DEFAULT NULL COMMENT '用户ID',
+  `user_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '用户姓名',
+  `user_phone` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '用户手机号',
+  `vehicle_type` int(2) NULL DEFAULT NULL COMMENT '车辆类型 1汽车 2摩托车',
+  `vehicle_brand` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '汽车车辆品牌',
+  `vehicle_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '汽车车辆名称',
+  `kilometers` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '车辆行驶公里数',
+  `moto_model` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '摩托车车辆型号',
+  `moto_color` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '摩托车颜色',
+  `sales_id` bigint(20) NULL DEFAULT NULL COMMENT '销售人ID',
+  `sales_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '销售人名称',
+  `auditor_id` bigint(20) NULL DEFAULT NULL COMMENT '审核人ID',
+  `auditor_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '审核人姓名',
+  `status` int(2) NULL DEFAULT NULL COMMENT '状态 0未处理 1已处理',
+  `communicate` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '沟通结果',
+  `create_time` datetime(0) NULL DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime(0) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_phone`(`user_phone`) USING BTREE,
+  INDEX `idx_sales_id`(`sales_id`) USING BTREE,
+  INDEX `idx_sales_name`(`sales_name`) USING BTREE,
+  INDEX `idx_create_time`(`create_time`) USING BTREE,
+  INDEX `idx_user_name`(`user_name`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '线索表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for t_insurance_type
+-- ----------------------------
+DROP TABLE IF EXISTS `t_insurance_type`;
+CREATE TABLE `t_insurance_type`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '名称',
+  `is_delete` tinyint(4) NOT NULL DEFAULT 0 COMMENT '是否删除 0未删除 1已删除',
+  `create_time` datetime(0) NOT NULL COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for t_order
+-- ----------------------------
+DROP TABLE IF EXISTS `t_order`;
+CREATE TABLE `t_order`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `order_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '订单ID',
+  `user_id` bigint(20) NULL DEFAULT NULL COMMENT '用户ID',
+  `opay_id` bigint(20) NOT NULL COMMENT 'opay账户',
+  `order_status` int(10) NULL DEFAULT NULL COMMENT '订单状态:10:\"等待初审\", 11:\"初审通过\", 12:\"初审拒绝\", 20:\"等待复审\", 21:\"复审通过\", 22:\"初审拒绝\", 30:\"等待终审\", 31:\"终审通过\", 32:\"终审拒绝\", 40:\"等待合同上传\", 41:\"合同等待一审\", 42:\"合同审核一审成功\", 43:\"合同审核一审失败\", 45:\"合同等待二审\", 44:\"合同审核二审成功\", 46:\"合同审核二审失败\", 60:\"等待放款- 合同审核成功后\", 61:\"放款成功\", 62:\"放款中\", 63:\"放款失败\"',
+  `full_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '客户姓名',
+  `voter_card` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '选举卡',
+  `birthday` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '生日',
+  `cell_phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '手机号',
+  `sex` tinyint(2) NULL DEFAULT NULL COMMENT '性别 1=男 2=女',
+  `age` int(10) NULL DEFAULT NULL COMMENT '年龄',
+  `kyc_level` tinyint(5) NULL DEFAULT NULL COMMENT '等级',
+  `email` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '邮箱',
+  `marital_status` tinyint(2) NULL DEFAULT 0 COMMENT '婚姻状况 0未婚 1已婚',
+  `education` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `position` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '职位',
+  `working_years` int(20) NULL DEFAULT NULL COMMENT '工作年限',
+  `company_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '公司名称',
+  `company_address` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '公司地址',
+  `company_phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '公司联系电话',
+  `bank_account` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '银行账号',
+  `annual_income` bigint(20) NULL DEFAULT NULL COMMENT '年收入',
+  `current_address` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '当前居住地址',
+  `living_condition` tinyint(4) NULL DEFAULT NULL COMMENT '居住条件 1：owner 2:reting',
+  `living_years` int(20) NULL DEFAULT NULL COMMENT '居住年限',
+  `children_support` int(20) NULL DEFAULT NULL COMMENT '供养孩子',
+  `faith` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '信仰',
+  `social_accounts` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '社交账号',
+  `social_type` tinyint(4) NULL DEFAULT NULL COMMENT '社交账号类型 1=Whatsapp 2=Facebook 3=Instagram 4=Twitter',
+  `tax_identify` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '税务识别码',
+  `BVN` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '用户身份认证',
+  `product_id` bigint(20) NULL DEFAULT NULL COMMENT '金融产品Id',
+  `product_version` bigint(20) NULL DEFAULT NULL COMMENT '金融产品版本',
+  `apply_amount` bigint(20) NULL DEFAULT NULL COMMENT '申请金额',
+  `approval_amount` bigint(20) NULL DEFAULT NULL COMMENT '审批金额',
+  `monthly_rent` bigint(20) NULL DEFAULT NULL COMMENT '月租金额',
+  `term` bigint(10) NULL DEFAULT NULL COMMENT '期限',
+  `apply_comment` varchar(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '申请备注',
+  `fail_reason` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '失败原因：合同、放款备注',
+  `serial_number` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '放款流水号',
+  `pay_time` datetime(0) NULL DEFAULT NULL COMMENT '放款日期',
+  `create_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0),
+  `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0),
+  `risk_status` tinyint(2) NULL DEFAULT 1 COMMENT '风控审核状态：1通过 2拒绝',
+  `risk_reason` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '风控拒绝理由',
+  `remark` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
+  `audit_lock` tinyint(4) NOT NULL DEFAULT 0 COMMENT '审核状态 0正常 1审核中',
+  `auditor_id` bigint(20) NULL DEFAULT NULL COMMENT '审核人员ID',
+  `payment_status` int(10) NULL DEFAULT 0 COMMENT '还款状态： 0未结清 1已结清',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_order_id`(`order_id`) USING BTREE,
+  INDEX `idx_order_status`(`order_status`) USING BTREE,
+  INDEX `idx_opay_id`(`opay_id`) USING BTREE,
+  INDEX `idx_user_id`(`user_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 47 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '订单信息' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for t_order_audit
+-- ----------------------------
+DROP TABLE IF EXISTS `t_order_audit`;
+CREATE TABLE `t_order_audit`  (
+  `id` bigint(11) NOT NULL AUTO_INCREMENT,
+  `order_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '订单ID',
+  `type` tinyint(2) NOT NULL COMMENT '类型 0初审 1复审 2终审',
+  `audit_mon` bigint(20) NOT NULL DEFAULT 0 COMMENT '通过金额',
+  `status` tinyint(4) NOT NULL DEFAULT 0 COMMENT '状态 0通过 1拒绝 2驳回',
+  `phone_content` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '申请备注',
+  `audit_content` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '审核内容',
+  `creator_id` bigint(11) NOT NULL COMMENT '创建人ID',
+  `creator_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '创建人姓名',
+  `create_time` datetime(0) NOT NULL COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 122 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for t_order_related_user
+-- ----------------------------
+DROP TABLE IF EXISTS `t_order_related_user`;
+CREATE TABLE `t_order_related_user`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `order_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '订单Id',
+  `cln_relation` tinyint(4) NULL DEFAULT NULL COMMENT '亲属关系: 1配偶、2直系、3朋友 、4同事',
+  `cln_full_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属名称',
+  `cln_voter_card` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `cln_cell_phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属手机号',
+  `cln_birthday` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属生日',
+  `cln_email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属邮箱',
+  `cln_education` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属教育',
+  `cln_company_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属公司名称',
+  `cln_company_address` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属公司地址',
+  `cln_company_phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属公司电话',
+  `cln_home_address` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属家庭住址',
+  `cln_faith` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '信仰',
+  `cln_social_accounts` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属社交账号',
+  `cln_social_type` tinyint(4) NULL DEFAULT NULL COMMENT '亲属社交账号类型 1=Whatsapp 2=Facebook 3=Instagram 4=Twitter',
+  `cln_tax_identify` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属税务识别',
+  `cln_bvn` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属BVN',
+  `con_relation` tinyint(4) NULL DEFAULT NULL COMMENT '联系人关系',
+  `con_full_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '亲属名称',
+  `con_cell_phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '联系人电话',
+  `w1_relation` tinyint(4) NULL DEFAULT NULL COMMENT '担保人1关系 1配偶、2直系、3朋友 、4同事',
+  `w1_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人1姓名',
+  `w1_voter_card` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `w1_cell_phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人1手机',
+  `w1_sex` tinyint(2) NULL DEFAULT NULL COMMENT '担保人1性别 1=男 2=女',
+  `w1_current_address` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人1现居地址',
+  `w1_company_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人1公司名称',
+  `w1_company_address` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人1公司地址',
+  `w1_company_phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人1公司电话',
+  `w1_position` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `w1_annual_income` bigint(20) NULL DEFAULT NULL COMMENT '担保人1税后年收入',
+  `w1_tax_identify` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人1税务识别码',
+  `w1_faith` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `w1_social_accounts` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人1社交账号',
+  `w1_social_type` tinyint(4) NULL DEFAULT NULL COMMENT '担保人1社交类型 1=Whatsapp 2=Facebook 3=Instagram 4=Twitter',
+  `w2_relation` tinyint(4) NULL DEFAULT NULL COMMENT '担保人2关系 1配偶、2直系、3朋友 、4同事',
+  `w2_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人2姓名',
+  `w2_voter_card` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `w2_cell_phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人2手机',
+  `w2_sex` tinyint(2) NULL DEFAULT NULL COMMENT '担保人2性别 1=男 2=女',
+  `w2_current_address` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人2现居地址',
+  `w2_company_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人2公司名称',
+  `w2_company_address` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人2公司地址',
+  `w2_company_phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人2公司电话',
+  `w2_position` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `w2_annual_income` bigint(20) NULL DEFAULT NULL COMMENT '担保人2税后年收入',
+  `w2_tax_identify` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人2税务识别码',
+  `w2_faith` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `w2_social_accounts` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '担保人2社交账号',
+  `w2_social_type` tinyint(4) NULL DEFAULT NULL COMMENT '担保人2社交类型 1=Whatsapp 2=Facebook 3=Instagram 4=Twitter',
+  `create_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0),
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_order_id`(`order_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 84 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '订单关联用户信息' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for t_order_vehicle_user
+-- ----------------------------
+DROP TABLE IF EXISTS `t_order_vehicle_user`;
+CREATE TABLE `t_order_vehicle_user`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `order_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '订单Id',
+  `vehicle_type` tinyint(2) NOT NULL COMMENT '车辆型号: 1 automobile 2 motocycle',
+  `vehicle_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '车辆名称',
+  `model_id` bigint(20) NULL DEFAULT NULL COMMENT '型号Id',
+  `brand_id` bigint(20) NULL DEFAULT NULL COMMENT '品牌Id',
+  `color` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '颜色',
+  `engine_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '引擎编号',
+  `kilometers` bigint(10) NULL DEFAULT NULL COMMENT '公里数',
+  `vin` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'vin码',
+  `mortgage_city` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '抵押城市',
+  `license_date` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `license_number` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `vehicle_valuation` bigint(20) NULL DEFAULT NULL COMMENT '车辆评估价',
+  `ci_expire_date` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `bi_type` tinyint(4) NULL DEFAULT NULL COMMENT '商业险类型',
+  `bi_expire_date` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `driver_photo` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '驾照',
+  `yearly_inspect_photo` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '年检照片',
+  `residence_photo` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '居住地缴费照片',
+  `ci_policy_photo` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '车辆强制保险照片',
+  `vehicle_certify` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '车辆权属证明照片',
+  `bank_statement` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '银行流水照片',
+  `other_photo` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '其他',
+  `election_card` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '选举卡',
+  `create_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0),
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_order_id`(`order_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 72 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '订单关联用户车辆信息' ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;

@@ -1,0 +1,22 @@
+datebeg="2019-02-26"
+dateend="2019-03-25"
+
+beg_s=`date -d "$datebeg" +%s`
+end_s=`date -d "$dateend" +%s`
+
+
+
+
+while [ "$beg_s" -le "$end_s" ];do
+    day=`date -d @$beg_s +"%Y-%m-%d"`;
+    month=${day%-*};
+    startMonth=${month}-01
+    echo "当前日期：$day"
+
+    hive -e "
+		sql_stament
+	"
+    beg_s=$((beg_s+86400));
+done
+
+echo "日期全部处理完成"

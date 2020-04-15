@@ -1,0 +1,819 @@
+
+
+
+
+最初的设计：由于app就是最终的汇总层，最好不要出报表的时候再进行汇总
+
+
+select
+          terms,--分期数
+          opay_id, --用户opayId
+          date_of_entry,--进件日期
+          substr(date_of_entry,1,7),--进件月份
+          concat(date_add(next_day(date_of_entry,'MO'),-7),'_',date_add(next_day(date_of_entry,'MO'),-2)),--进件周
+          count(distinct case when order_status='81' then opay_id else null end), --   `放款数` ,
+          sum(case when order_status='81' then (loan_amount/100)*0.2712/100 else 0 end),--`贷款金额_USD` ,
+          'nal' as country_code,
+          dt
+          from
+          ocredit_phones_dw.dwd_ocredit_phones_order_df
+          where dt='{pt}'
+          group by terms,date_of_entry,dt,opay_id,substr(date_of_entry,1,7),concat(date_add(next_day(date_of_entry,'MO'),-7),'_',date_add(next_day(date_of_entry,'MO'),-2))
+          
+
+1.
+
+          select
+          
+          case when date_entry is not null then date_entry else '合计' end as date_entry,
+          count(distinct opay_id) as in_entries,
+          sum(loan_count) as loan_count,
+          round(sum(loan_amount_usd),2) as loan_amount_usd,
+          round(sum(loan_amount_usd)/sum(loan_count),2) as average_usd,
+          concat(round(sum(loan_count)/count(distinct opay_id)*100,2),'%') as business_rate,
+          
+          count(distinct case when terms=3 then opay_id else null end) as in_t_entries,
+          sum(case when terms=3 then loan_count else null end) as loan_t_count,
+          round(sum(case when terms=3 then loan_amount_usd else null end),2) as loan_amount_t_usd,
+          round(sum(case when terms=3 then loan_amount_usd else null end)/sum(case when terms=3 then loan_count else null end),2) as average_t_usd,
+          concat(round(sum(case when terms=3 then loan_count else null end)/count(distinct case when terms=3 then opay_id else null end)*100,2),'%') business_t_rate,
+          
+          count(distinct case when terms=6 then opay_id else null end) as in_s_entries,
+          sum(case when terms=6 then loan_count else null end) as loan_s_count,
+          round(sum(case when terms=6 then loan_amount_usd else null end),2) as loan_amount_s_usd,
+          round(sum(case when terms=6 then loan_amount_usd else null end)/sum(case when terms=6 then loan_count else null end),2) as average_s_usd,
+          concat(round(sum(case when terms=6 then loan_count else null end)/count(distinct case when terms=6 then opay_id else null end)*100,2),'%') business_s_rate
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_cube_d 
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and substr(date_entry,1,7) = substr(date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1),1,7)
+          group by date_entry
+          WITH ROLLUP
+          order by date_entry
+          
+
+2.
+
+          select
+
+          case when month_entry is not null then month_entry else '合计' end as month_entry,
+          count(distinct opay_id) as in_entries,
+          sum(loan_count) as loan_count,
+          round(sum(loan_amount_usd),2) as loan_amount_usd,
+          round(sum(loan_amount_usd)/sum(loan_count),2) as average_usd,
+          concat(round(sum(loan_count)/count(distinct opay_id)*100,2),'%') as business_rate,
+          
+          count(distinct case when terms=3 then opay_id else null end) as in_t_entries,
+          sum(case when terms=3 then loan_count else null end) as loan_t_count,
+          round(sum(case when terms=3 then loan_amount_usd else null end),2) as loan_amount_t_usd,
+          round(sum(case when terms=3 then loan_amount_usd else null end)/sum(case when terms=3 then loan_count else null end),2) as average_t_usd,
+          concat(round(sum(case when terms=3 then loan_count else null end)/count(distinct case when terms=3 then opay_id else null end)*100,2),'%') business_t_rate,
+          
+          count(distinct case when terms=6 then opay_id else null end) as in_s_entries,
+          sum(case when terms=6 then loan_count else null end) as loan_s_count,
+          round(sum(case when terms=6 then loan_amount_usd else null end),2) as loan_amount_s_usd,
+          round(sum(case when terms=6 then loan_amount_usd else null end)/sum(case when terms=6 then loan_count else null end),2) as average_s_usd,
+          concat(round(sum(case when terms=6 then loan_count else null end)/count(distinct case when terms=6 then opay_id else null end)*100,2),'%') business_s_rate
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_cube_d 
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          group by month_entry
+          WITH ROLLUP
+          order by  month_entry
+
+
+3.
+
+          select
+          
+          case when week_entry is not null then week_entry else '合计' end as week_entry,
+          count(distinct opay_id) as in_entries,
+          sum(loan_count) as loan_count,
+          round(sum(loan_amount_usd),2) as loan_amount_usd,
+          round(sum(loan_amount_usd)/sum(loan_count),2) as average_usd,
+          concat(round(sum(loan_count)/count(distinct opay_id)*100,2),'%') as business_rate,
+          
+          count(distinct case when terms=3 then opay_id else null end) as in_t_entries,
+          sum(case when terms=3 then loan_count else null end) as loan_t_count,
+          round(sum(case when terms=3 then loan_amount_usd else null end),2) as loan_amount_t_usd,
+          round(sum(case when terms=3 then loan_amount_usd else null end)/sum(case when terms=3 then loan_count else null end),2) as average_t_usd,
+          concat(round(sum(case when terms=3 then loan_count else null end)/count(distinct case when terms=3 then opay_id else null end)*100,2),'%') business_t_rate,
+          
+          count(distinct case when terms=6 then opay_id else null end) as in_s_entries,
+          sum(case when terms=6 then loan_count else null end) as loan_s_count,
+          round(sum(case when terms=6 then loan_amount_usd else null end),2) as loan_amount_s_usd,
+          round(sum(case when terms=6 then loan_amount_usd else null end)/sum(case when terms=6 then loan_count else null end),2) as average_s_usd,
+          concat(round(sum(case when terms=6 then loan_count else null end)/count(distinct case when terms=6 then opay_id else null end)*100,2),'%') business_s_rate
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_cube_d 
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and week_entry>=concat(date_add(next_day(dt,'MO'),-7*4),'_',date_add(next_day(dt,'MO'),-7*3-2))
+          and week_entry<=concat(date_add(next_day(dt,'MO'),-7),'_',date_add(next_day(dt,'MO'),-2))
+          group by week_entry
+          WITH ROLLUP
+          order by week_entry
+          
+
+
+
+后来：这样app就是最终的汇总层
+
+
+select
+          terms,--分期数
+          count(distinct opay_id), --进件数量
+          date_of_entry,--进件日期
+          substr(date_of_entry,1,7),--进件月份
+          concat(date_add(next_day(date_of_entry,'MO'),-7),'_',date_add(next_day(date_of_entry,'MO'),-2)),--进件周
+          count(distinct case when order_status='81' then opay_id else null end), --   `放款数` ,
+          round(sum(case when order_status='81' then (loan_amount/100)*0.2712/100 else 0 end),2),--`贷款金额_USD` ,
+          'nal' as country_code,
+          '{pt}' as dt
+          from
+          ocredit_phones_dw.dwd_ocredit_phones_order_di
+          group by terms,date_of_entry,substr(date_of_entry,1,7),concat(date_add(next_day(date_of_entry,'MO'),-7),'_',date_add(next_day(date_of_entry,'MO'),-2))
+          grouping sets(
+          date_of_entry,
+          concat(date_add(next_day(date_of_entry,'MO'),-7),'_',date_add(next_day(date_of_entry,'MO'),-2)),
+          substr(date_of_entry,1,7),
+          (terms,date_of_entry),
+          (terms,concat(date_add(next_day(date_of_entry,'MO'),-7),'_',date_add(next_day(date_of_entry,'MO'),-2))),  
+          (terms,substr(date_of_entry,1,7))
+          )
+    
+
+
+select
+          
+          case when date_entry is not null then date_entry else '合计' end as date_entry,
+          sum(case when terms is null and month_entry is null and week_entry is null then in_entries else null end),
+          sum(case when terms is null and month_entry is null and week_entry is null then loan_count else null end),
+          round(sum(case when terms is null and month_entry is null and week_entry is null then loan_amount_usd else null end),2),
+          round(sum(case when terms is null and month_entry is null and week_entry is null then loan_amount_usd else null end)/sum(case when terms is null and month_entry is null and week_entry is null then loan_count else null end),2),
+          concat(round(
+          (sum(case when terms is null and month_entry is null and week_entry is null then loan_count else null end)/
+          sum(case when terms is null and month_entry is null and week_entry is null then in_entries else null end))*100
+          ,2),'%'),
+
+
+
+          sum(case when terms=3 and month_entry is null and week_entry is null then in_entries else null end),
+          sum(case when terms=3 and month_entry is null and week_entry is null then loan_count else null end),
+          round(sum(case when terms=3 and month_entry is null and week_entry is null then loan_amount_usd else null end),2),
+          round(sum(case when terms=3 and month_entry is null and week_entry is null then loan_amount_usd else null end)/sum(case when terms is null and month_entry is null and week_entry is null then loan_count else null end),2),
+          concat(round(
+          (sum(case when terms=3 and month_entry is null and week_entry is null then loan_count else null end)/
+          sum(case when terms=3 and month_entry is null and week_entry is null then in_entries else null end))*100
+          ,2),'%'),
+
+
+          sum(case when terms=6 and month_entry is null and week_entry is null then in_entries else null end),
+          sum(case when terms=6 and month_entry is null and week_entry is null then loan_count else null end),
+          round(sum(case when terms=6 and month_entry is null and week_entry is null then loan_amount_usd else null end),2),
+          round(sum(case when terms=6 and month_entry is null and week_entry is null then loan_amount_usd else null end)/sum(case when terms is null and month_entry is null and week_entry is null then loan_count else null end),2),
+          concat(round(
+          (sum(case when terms=6 and month_entry is null and week_entry is null then loan_count else null end)/
+          sum(case when terms=6 and month_entry is null and week_entry is null then in_entries else null end))*100
+          ,2),'%')
+
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_cube_d 
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and substr(date_entry,1,7) = substr(date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1),1,7)
+          group by date_entry
+          WITH ROLLUP
+          order by date_entry
+
+
+进件数量多，有重复问题
+
+
+
+又后来，分成了三张表：
+
+INSERT overwrite TABLE ocredit_phones_dw.{table} partition(country_code,dt)
+    select nvl(terms,-10000) as terms,
+           nvl(date_of_entry,'-10000') as date_of_entry,
+           entry_cnt, --进件量
+           loan_cnt,  --`放款数` ,
+           loan_amount_usd, --`贷款金额_USD` 
+           'nal' as country_code,
+           '{pt}' as dt
+    from(select terms,--分期数
+          date_of_entry,--进件日期
+          count(distinct opay_id) as entry_cnt, --进件量
+          count(distinct (if(order_status='81',opay_id,null))) as loan_cnt, --`放款数` ,
+          sum(if(order_status='81',(nvl(loan_amount,0)/100)*0.2712/100,0)) as loan_amount_usd --`贷款金额_USD` 
+    from ocredit_phones_dw.dwd_ocredit_phones_order_base_df
+    where dt='{pt}'
+    and substr(date_of_entry,1,7)=substr(dt,1,7)
+    group by terms,date_of_entry
+    grouping sets(date_of_entry,
+          (terms,date_of_entry))
+          ) t;
+
+
+
+
+    INSERT overwrite TABLE ocredit_phones_dw.{table} partition(country_code,dt)
+    select nvl(terms,-10000) as terms,
+           nvl(month_of_entry,'-10000') as month_of_entry, --进件所在月
+           entry_cnt, --进件量
+           loan_cnt,  --`放款数` ,
+           loan_amount_usd, --`贷款金额_USD` 
+           'nal' as country_code,
+           '{pt}' as dt
+    from(select terms,--分期数
+          substr(date_of_entry,1,7) as month_of_entry, --进件所在月
+          count(distinct opay_id) as entry_cnt, --进件量
+          count(distinct (if(order_status='81',opay_id,null))) as loan_cnt, --`放款数` ,
+          sum(if(order_status='81',(nvl(loan_amount,0)/100)*0.2712/100,0)) as loan_amount_usd --`贷款金额_USD` 
+    from ocredit_phones_dw.dwd_ocredit_phones_order_base_df
+    where dt='{pt}'
+    group by terms,substr(date_of_entry,1,7)
+    grouping sets(substr(date_of_entry,1,7),
+          (terms,substr(date_of_entry,1,7)))
+          ) t;
+
+
+
+    INSERT overwrite TABLE ocredit_phones_dw.{table} partition(country_code,dt)
+    select nvl(terms,-10000) as terms,
+           nvl(week_of_entry,'-10000') as week_of_entry,
+           concat_ws('-',regexp_replace(substr(minweek_of_entry,6,10),'-',''),regexp_replace(substr(date_add(minweek_of_entry,6),6,10),'-','')) as dateweek_of_entry, --所在周日期区间
+           entry_cnt, --进件量
+           loan_cnt,  --`放款数` ,
+           loan_amount_usd, --`贷款金额_USD` 
+           'nal' as country_code,
+           '{pt}' as dt
+    from(select terms,--分期数
+          weekofyear(date_of_entry) as week_of_entry, --进件日期所在周
+          min(date_of_entry) as minweek_of_entry, --进件日期所在周对应最小日期
+          max(date_of_entry) as maxweek_of_entry, --进件日期所在周对应最大日期
+          count(distinct opay_id) as entry_cnt, --进件量
+          count(distinct (if(order_status='81',opay_id,null))) as loan_cnt, --`放款数` ,
+          sum(if(order_status='81',(nvl(loan_amount,0)/100)*0.2712/100,0)) as loan_amount_usd --`贷款金额_USD` 
+    from ocredit_phones_dw.dwd_ocredit_phones_order_base_df
+    where dt='{pt}'
+    and weekofyear(dt)-weekofyear(date_of_entry)>=0  --跨年后来考虑
+    and weekofyear(dt)-weekofyear(date_of_entry)<4
+    group by terms,weekofyear(date_of_entry)
+    grouping sets(weekofyear(date_of_entry),
+          (terms,weekofyear(date_of_entry)))
+          ) t;
+
+
+
+
+
+
+
+
+刚开始，数据出现左右错乱
+
+select 
+if(terms=-10000,date_of_entry,null) date_of_entry,
+
+if(terms=-10000 ,entry_cnt,null) entry_cnt,
+if(terms=-10000 ,loan_cnt,null) loan_cnt,
+if(terms=-10000 ,round(loan_amount_usd,2),null) loan_amount_usd,
+if(terms=-10000 ,round(loan_amount_usd/loan_cnt,2),null) average_usd,
+if(terms=-10000 ,concat(round(loan_cnt/entry_cnt*100,2),'%'),null) business_rate,
+
+
+if(terms=3 ,entry_cnt,null) entry_t_cnt,
+if(terms=3 ,loan_cnt,null) loan_t_cnt,
+if(terms=3 ,round(loan_amount_usd,2),null) loan_amount_t_usd,
+if(terms=3 ,round(loan_amount_usd/loan_cnt,2),null) average_t_usd,
+if(terms=3 ,concat(round(loan_cnt/entry_cnt*100,2),'%'),null) business_t_rate,
+
+if(terms=6 ,entry_cnt,null) entry_s_cnt,
+if(terms=6 ,loan_cnt,null) loan_s_cnt,
+if(terms=6 ,round(loan_amount_usd,2),null) loan_amount_s_usd,
+if(terms=6 ,round(loan_amount_usd/loan_cnt,2),null) average_s_usd,
+if(terms=6 ,concat(round(loan_cnt/entry_cnt*100,2),'%'),null) business_s_rate
+
+from app_ocredit_phones_order_base_cube_d
+where substr(date_of_entry,1,7) = substr(date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1),1,7)
+order by date_of_entry
+
+----
+
+
+
+===================================1
+
+          select date_of_entry,
+          sum(entry_cnt) as entry_cnt,
+          sum(loan_cnt) as loan_cnt,
+          sum(loan_amount_usd) as loan_amount_usd,
+          sum(average_usd) as average_usd,
+          concat(sum(business_rate),'%') as business_rate,
+          
+          sum(entry_cnt_3) as entry_cnt_3,
+          sum(loan_cnt_3) as loan_cnt_3,
+          sum(loan_amount_usd_3) as loan_amount_usd_3,
+          sum(average_usd_3) as average_usd_3,
+          concat(sum(business_rate_3),'%') as business_rate_3,
+          
+          sum(entry_cnt_6) as entry_cnt_6,
+          sum(loan_cnt_6) as loan_cnt_6,
+          sum(loan_amount_usd_6) as loan_amount_usd_6,
+          sum(average_usd_6) as average_usd_6,
+          concat(sum(business_rate_6),'%') as business_rate_6
+          
+          from(
+          select date_of_entry,
+          entry_cnt,
+          loan_cnt,
+          round(loan_amount_usd,2) loan_amount_usd,
+          round(loan_amount_usd/loan_cnt,2) average_usd,
+          round(loan_cnt/entry_cnt*100,2) business_rate,
+          null as entry_cnt_3,
+          null as loan_cnt_3,
+          null as loan_amount_usd_3,
+          null as average_usd_3,
+          null as business_rate_3,
+          null as entry_cnt_6,
+          null as loan_cnt_6,
+          null as loan_amount_usd_6,
+          null as average_usd_6,
+          null as business_rate_6
+
+
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_d
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and terms=-10000
+          and substr(date_of_entry,1,7) = substr(date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1),1,7)
+          
+          union all
+          
+          select date_of_entry,
+          null as entry_cnt,
+          null as loan_cnt,
+          null as loan_amount_usd,
+          null as average_usd,
+          null as business_rate,
+          entry_cnt as entry_cnt_3,
+          loan_cnt as loan_cnt_3,
+          round(loan_amount_usd,2) loan_amount_usd_3,
+          round(loan_amount_usd/loan_cnt,2) average_usd_3,
+          round(loan_cnt/entry_cnt*100,2) business_rate_3,
+          null as entry_cnt_6,
+          null as loan_cnt_6,
+          null as loan_amount_usd_6,
+          null as average_usd_6,
+          null as business_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_d
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and terms=3
+          and substr(date_of_entry,1,7) = substr(date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1),1,7)
+          
+          
+          union all
+          select date_of_entry,
+          null as entry_cnt,
+          null as loan_cnt,
+          null as loan_amount_usd,
+          null as average_usd,
+          null as business_rate,
+          null as entry_cnt_3,
+          null as loan_cnt_3,
+          null as loan_amount_usd_3,
+          null as average_usd_3,
+          null as business_rate_3,
+          entry_cnt as entry_cnt_6,
+          loan_cnt as loan_cnt_6,
+          round(loan_amount_usd,2) loan_amount_usd_6,
+          round(loan_amount_usd/loan_cnt,2) average_usd_6,
+          round(loan_cnt/entry_cnt*100,2) business_rate_6
+
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_d
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and terms=6
+          and substr(date_of_entry,1,7) = substr(date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1),1,7)
+          
+          ) a
+          group by date_of_entry
+          order by date_of_entry
+
+============================================2
+
+          select month_of_entry,
+          sum(entry_cnt) as entry_cnt,
+          sum(loan_cnt) as loan_cnt,
+          sum(loan_amount_usd) as loan_amount_usd,
+          sum(average_usd) as average_usd,
+          concat(sum(business_rate),'%') as business_rate,
+          
+          sum(entry_cnt_3) as entry_cnt_3,
+          sum(loan_cnt_3) as loan_cnt_3,
+          sum(loan_amount_usd_3) as loan_amount_usd_3,
+          sum(average_usd_3) as average_usd_3,
+          concat(sum(business_rate_3),'%') as business_rate_3,
+          
+          sum(entry_cnt_6) as entry_cnt_6,
+          sum(loan_cnt_6) as loan_cnt_6,
+          sum(loan_amount_usd_6) as loan_amount_usd_6,
+          sum(average_usd_6) as average_usd_6,
+          concat(sum(business_rate_6),'%') as business_rate_6
+          
+          from(
+          select month_of_entry,
+          entry_cnt,
+          loan_cnt,
+          round(loan_amount_usd,2) loan_amount_usd,
+          round(loan_amount_usd/loan_cnt,2) average_usd,
+          round(loan_cnt/entry_cnt*100,2) business_rate,
+          null as entry_cnt_3,
+          null as loan_cnt_3,
+          null as loan_amount_usd_3,
+          null as average_usd_3,
+          null as business_rate_3,
+          null as entry_cnt_6,
+          null as loan_cnt_6,
+          null as loan_amount_usd_6,
+          null as average_usd_6,
+          null as business_rate_6
+          
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_m
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and terms=-10000
+          
+          union all
+
+          select month_of_entry,
+          null as entry_cnt,
+          null as loan_cnt,
+          null as loan_amount_usd,
+          null as average_usd,
+          null as business_rate,
+          entry_cnt as entry_cnt_3,
+          loan_cnt as loan_cnt_3,
+          round(loan_amount_usd,2) loan_amount_usd_3,
+          round(loan_amount_usd/loan_cnt,2) average_usd_3,
+          round(loan_cnt/entry_cnt*100,2) business_rate_3,
+          null as entry_cnt_6,
+          null as loan_cnt_6,
+          null as loan_amount_usd_6,
+          null as average_usd_6,
+          null as business_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_m
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and terms=3
+          
+          
+          union all
+          select month_of_entry,
+          null as entry_cnt,
+          null as loan_cnt,
+          null as loan_amount_usd,
+          null as average_usd,
+          null as business_rate,
+          null as entry_cnt_3,
+          null as loan_cnt_3,
+          null as loan_amount_usd_3,
+          null as average_usd_3,
+          null as business_rate_3,
+          entry_cnt as entry_cnt_6,
+          loan_cnt as loan_cnt_6,
+          round(loan_amount_usd,2) loan_amount_usd_6,
+          round(loan_amount_usd/loan_cnt,2) average_usd_6,
+          round(loan_cnt/entry_cnt*100,2) business_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_m
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and terms=6
+
+          ) a
+          group by month_of_entry
+          order by month_of_entry
+
+======================================3
+
+ 
+
+          select dateweek_of_entry,
+          sum(entry_cnt) as entry_cnt,
+          sum(loan_cnt) as loan_cnt,
+          sum(loan_amount_usd) as loan_amount_usd,
+          sum(average_usd) as average_usd,
+          concat(sum(business_rate),'%') as business_rate,
+          
+          sum(entry_cnt_3) as entry_cnt_3,
+          sum(loan_cnt_3) as loan_cnt_3,
+          sum(loan_amount_usd_3) as loan_amount_usd_3,
+          sum(average_usd_3) as average_usd_3,
+          concat(sum(business_rate_3),'%') as business_rate_3,
+          
+          sum(entry_cnt_6) as entry_cnt_6,
+          sum(loan_cnt_6) as loan_cnt_6,
+          sum(loan_amount_usd_6) as loan_amount_usd_6,
+          sum(average_usd_6) as average_usd_6,
+          concat(sum(business_rate_6),'%') as business_rate_6
+          
+          from(
+          
+          select 
+          dateweek_of_entry,
+          entry_cnt,
+          loan_cnt,
+          round(loan_amount_usd,2) loan_amount_usd,
+          round(loan_amount_usd/loan_cnt,2) average_usd,
+          round(loan_cnt/entry_cnt*100,2) business_rate,
+          null as entry_cnt_3,
+          null as loan_cnt_3,
+          null as loan_amount_usd_3,
+          null as average_usd_3,
+          null as business_rate_3,
+          null as entry_cnt_6,
+          null as loan_cnt_6,
+          null as loan_amount_usd_6,
+          null as average_usd_6,
+          null as business_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_w
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and terms=-10000
+          
+
+          union all
+          
+          select
+          dateweek_of_entry,
+          null as entry_cnt,
+          null as loan_cnt,
+          null as loan_amount_usd,
+          null as average_usd,
+          null as business_rate,
+          entry_cnt as entry_cnt_3,
+          loan_cnt as loan_cnt_3,
+          round(loan_amount_usd,2) loan_amount_usd_3,
+          round(loan_amount_usd/loan_cnt,2) average_usd_3,
+          round(loan_cnt/entry_cnt*100,2) business_rate_3,
+          null as entry_cnt_6,
+          null as loan_cnt_6,
+          null as loan_amount_usd_6,
+          null as average_usd_6,
+          null as business_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_w
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and terms=3
+          
+          
+          union all
+          select 
+          dateweek_of_entry,
+          null as entry_cnt,
+          null as loan_cnt,
+          null as loan_amount_usd,
+          null as average_usd,
+          null as business_rate,
+          null as entry_cnt_3,
+          null as loan_cnt_3,
+          null as loan_amount_usd_3,
+          null as average_usd_3,
+          null as business_rate_3,
+          entry_cnt as entry_cnt_6,
+          loan_cnt as loan_cnt_6,
+          round(loan_amount_usd,2) loan_amount_usd_6,
+          round(loan_amount_usd/loan_cnt,2) average_usd_6,
+          round(loan_cnt/entry_cnt*100,2) business_rate_6
+
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_w
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and terms=6
+          
+          ) a
+          group by dateweek_of_entry
+          order by dateweek_of_entry
+
+
+
+===========================================
+----
+
+
+
+
+
+
+
+
+dwd全量改为增量
+
+直接用ods最新日期动态分区补历史数据
+
+只不过以下是：每天只有创建时间的，再改一下代码，之后就是真正的增量了。
+(要是分别对创建时间和更新时间分别执行一次，就变成真正的增量了)。
+
+set hive.exec.parallel=true;
+    set hive.exec.dynamic.partition.mode=nonstrict;
+
+    INSERT overwrite TABLE ocredit_phones_dw.{table} partition(country_code,dt)
+
+    select
+          
+          id, --无业务含义主键 
+          order_id, --订单号 
+          business_type, --订单类型  0:手机 1:车 
+          user_id, --销售端用户ID 
+          opay_id, --用户opayId 
+          order_status, --订单状态：10 "等待初审"  11 "初核通过"  12 "初审失败"   30 "等待终审"  31 "复审通过"  32 "复审失败"   50 "待支付"  51 "支付中"  52 "支付失败"   70 "等待合同上传"  71 "合同等待审核"  72 "合同审核失败"  80 "等待放款"  81 "放款成功" 82 "放款中" 83 "放款失败" 99 "异常" 
+          pay_status, --0等待支付 1成功2失败 3支付回调中 
+          country, --国家 
+          city, --城市 
+          currency, --货币 
+          brand_id, --品牌id 
+          product_id, --产品ID 
+          product_type, --经营形式 1 自营 2 合作商 
+          product_num, --产品数量 
+          product_name, --产品名称 
+          product_pic, --产品图片 
+          product_version, --产品数据版本 
+          product_price, --产品售价 
+          down_payment, --首付金额 
+          loan_amount, --借款金额 
+          order_fee, --订单总金额=产品售价*产品数量(商品金额) 
+          terms, --期数 
+          payment_rate, --首付比例 
+          monthly_payment, --月还款金额 
+          monthly_principal, --月还本金 
+          monthly_fee, --月服务费 
+          unpaid_principal, --剩余本金 
+          f_product_id, --关联金融产品ID 
+          f_product_version, --关联金融产品数据版本 
+          merchant_id, --商户ID 
+          merchant_name, --商户名称 
+          store_id, --门店ID 
+          store_name, --门店名称 
+          is_delete, --0:未删除 1:已删除 
+          from_unixtime(unix_timestamp(create_time)+3600,'yyyy-MM-dd HH:mm:ss'), --创建时间 
+          from_unixtime(unix_timestamp(update_time)+3600,'yyyy-MM-dd HH:mm:ss'),--更新时间
+          from_unixtime(unix_timestamp(loan_time)+3600,'yyyy-MM-dd HH:mm:ss'),--放款时间 
+          opr_id, --操作更新用户ID 
+          risk_status, --风控审核状态：1通过 0拒绝 
+          risk_reason, --风控审核结果 
+          sale_name, --销售名称 
+          sale_phone, --销售电话 
+          remark, --备注、失败原因 
+          payment_status, --还款状态： 0未结清 3已结清 
+          loan_price, --手机价格(销售录入) 
+          channel, --渠道： 1=销售 2=用户 
+          product_category, --产品类型： 1 手机 2 汽车 3 摩托车 4 家电 5 电脑
+          case when order_id='012020011001240073' then '2020-01-04' else from_unixtime(unix_timestamp(create_time)+3600,'yyyy-MM-dd') end, --进件日期
+          'nal' as country_code,
+          if(order_id='012020011001240073','2020-01-04',from_unixtime(unix_timestamp(create_time)+3600,'yyyy-MM-dd')) as dt
+
+    from ocredit_phones_dw_ods.ods_sqoop_base_t_order_df
+    where dt='2020-02-23' 
+    -- or from_unixtime(unix_timestamp(update_time)+3600,'yyyy-MM-dd')='{pt}'
+and
+user_id not in 
+(
+'1209783514507214849', 
+'1209126038292123650',
+'1210903150317494274',
+'1214471918163460097',
+'1215642304343425026',
+'1226878328587288578'
+)
+and business_type = '0'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

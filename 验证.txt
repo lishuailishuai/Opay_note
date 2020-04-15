@@ -1,0 +1,651 @@
+--验证8号 5点到6点之间的订单数据 opay:5453  binlog:4888  丢失：565 
+--验证8号 1点到2点之间的订单数据 opay:7608  binlog:6104  丢失：964
+
+--以下是验证8号 1点到2点之间的订单数据的验证逻辑过程：
+--opay表的订单数 7608
+select 
+count(distinct order_no)
+from
+opay_dw.dwd_opay_transaction_record_di
+where create_time BETWEEN date_format('2020-01-08', 'yyyy-MM-dd 00') 
+AND date_format('2020-01-08', 'yyyy-MM-dd 01')
+or update_time BETWEEN date_format('2020-01-08', 'yyyy-MM-dd 00') 
+AND date_format('2020-01-08', 'yyyy-MM-dd 01')
+and dt='2020-01-08'
+;
+
+--binlog表的订单数  6104
+select
+count(distinct order_no)
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id,t.`__table` order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-08 00' AND '2020-01-08 01'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+where from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd HH:mm:ss') 
+BETWEEN '2020-01-08 00' AND '2020-01-08 01'
+;
+
+
+--binlog表缺失的数据量  964
+select
+count(a.order_no)
+from
+(
+select 
+distinct order_no
+from
+opay_dw.dwd_opay_transaction_record_di
+where create_time BETWEEN date_format('2020-01-08', 'yyyy-MM-dd 00') 
+AND date_format('2020-01-08', 'yyyy-MM-dd 01')
+or update_time BETWEEN date_format('2020-01-08', 'yyyy-MM-dd 00') 
+AND date_format('2020-01-08', 'yyyy-MM-dd 01') 
+and dt='2020-01-08'
+) a
+left join
+(
+select
+distinct order_no
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000 + 60 * 60 * 1) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id,t.`__table` order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-08 00' AND '2020-01-08 01'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+where from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd HH:mm:ss') 
+BETWEEN '2020-01-08 01' AND '2020-01-08 02'
+) b 
+on a.order_no=b.order_no
+where b.order_no is null
+;
+
+
+--查出binlog 表缺失数据的订单号，验证订单号在binlog其他时间段是否有数据，结果没有。丢失数据
+select
+a.order_no
+from
+(
+select 
+distinct order_no
+from
+opay_dw.dwd_opay_transaction_record_di
+where create_time BETWEEN date_format('2020-01-08', 'yyyy-MM-dd 00') 
+AND date_format('2020-01-08', 'yyyy-MM-dd 01')
+or update_time BETWEEN date_format('2020-01-08', 'yyyy-MM-dd 00') 
+AND date_format('2020-01-08', 'yyyy-MM-dd 01') 
+and dt='2020-01-08'
+) a
+left join
+(
+select
+distinct order_no
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000 + 60 * 60 * 1) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id,t.`__table` order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-08 00' AND '2020-01-08 01'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+where from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd HH:mm:ss') 
+BETWEEN '2020-01-08 01' AND '2020-01-08 02'
+) b 
+on a.order_no=b.order_no
+where b.order_no is null
+limit 10
+;
+200107034461228114
+200107034464388963
+200107034495789096
+200107044499336622
+200107044499411257
+200107044499741936
+200107044514124706
+200107044529360351
+200107044532073415
+200107044532118819
+;
+
+--验证订单号在binlog其他时间段是否有数据，结果为0。丢失数据
+select
+*
+from
+(
+select 
+t.*
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id,t.`__table` order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+where
+order_no in ('200107034461228114',
+'200107034464388963',
+'200107034495789096',
+'200107044499336622',
+'200107044499411257',
+'200107044499741936',
+'200107044514124706',
+'200107044529360351',
+'200107044532073415',
+'200107044532118819')
+;
+
+
+
+--验证8号  
+
+--opay表的订单数 1038113
+select 
+count(distinct order_no)
+from
+opay_dw.dwd_opay_transaction_record_di
+where create_time BETWEEN date_format('2020-01-07', 'yyyy-MM-dd 23') 
+AND date_format('2020-01-08', 'yyyy-MM-dd 23')
+or update_time BETWEEN date_format('2020-01-07', 'yyyy-MM-dd 23') 
+AND date_format('2020-01-08', 'yyyy-MM-dd 23')
+and dt='2020-01-08'
+;
+
+--binlog表的订单数  944672   
+select
+count(distinct order_no)
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000 + 60*60*1) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id,t.`__table` order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-07 23' AND '2020-01-08 23'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+where from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd')='2020-01-08'
+;
+
+
+
+--binlog表缺失的数据量  93448   -=93441
+select
+count(a.order_no)
+from
+(
+select 
+distinct order_no
+from
+opay_dw.dwd_opay_transaction_record_di
+where create_time BETWEEN date_format('2020-01-07', 'yyyy-MM-dd 23') 
+AND date_format('2020-01-08', 'yyyy-MM-dd 23')
+or update_time BETWEEN date_format('2020-01-07', 'yyyy-MM-dd 23') 
+AND date_format('2020-01-08', 'yyyy-MM-dd 23')
+and dt='2020-01-08'
+) a
+left join
+(
+select
+distinct order_no
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000 + 60 * 60 * 1) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id,t.`__table` order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-07 23' AND '2020-01-08 23'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+where from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd')='2020-01-08'
+) b 
+on a.order_no=b.order_no
+where b.order_no is null
+;
+
+--    93448-93441=7
+--查出binlog表有，但opay表没有的7条数据
+select
+b.order_no
+from
+(
+select 
+distinct order_no
+from
+opay_dw.dwd_opay_transaction_record_di
+where create_time BETWEEN date_format('2020-01-07', 'yyyy-MM-dd 23') 
+AND date_format('2020-01-08', 'yyyy-MM-dd 23')
+or update_time BETWEEN date_format('2020-01-07', 'yyyy-MM-dd 23') 
+AND date_format('2020-01-08', 'yyyy-MM-dd 23') 
+and dt='2020-01-08'
+) a
+right join
+(
+select
+distinct order_no
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000 + 60 * 60 * 1) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id,t.`__table` order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-07 23' AND '2020-01-08 23'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+where from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd')='2020-01-08'
+) b 
+on a.order_no=b.order_no
+where a.order_no is null
+;
+2001070658378358
+2001080661892560
+2001080661893825
+2001080663909307
+2001080663910812
+2001080665977520
+200108154591751642
+;
+
+
+-- 在opay这边的表并没有数据
+select
+create_time,
+update_time,
+dt
+from
+opay_dw.dwd_opay_transaction_record_di
+where order_no='2001070658378358'
+
+
+
+考虑：如果有延迟，数据落地的状态是什么（创建时间  更新时间  dt）
+
+
+
+====================
+====================
+1.dwd层，当天订单数，要考虑创建时间和更新时间，因为这是明细层，如果是指标层面求当天订单数就只能
+考虑创建时间了。
+2.数据库中，是没有dt的，创建时间和更新时间都是utc时间。
+====================
+====================
+
+
+select
+from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd') ,
+count(distinct order_no)
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000 + 60 * 60 * 1) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-07 23' AND '2020-01-08 23'
+and `__table` = 'accounting_request_record_0000'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+where from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd')='2020-01-08'
+group by from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd') 
+;
+
+--2020-01-08	9359
+
+
+
+select
+count(distinct order_no)
+from accounting_request_record_0000
+where (create_time >= '2020-01-07 23:00:00.0' and create_time < '2020-01-08 23:00:00.0') 
+or (update_time >= '2020-01-07 23:00:00.0' and update_time < '2020-01-08 23:00:00.0')
+
+--9359  把更新时间去掉，结果一样。
+
+
+;
+select
+count(distinct order_no)
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000 + 60 * 60 * 1) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-08 03' AND '2020-01-08 04'
+and `__table` = 'accounting_request_record_0001'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+where from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd HH:mm:ss') 
+BETWEEN '2020-01-08 04' AND '2020-01-08 05'
+;
+
+--22
+
+select
+count(distinct order_no)
+from accounting_request_record_0001
+where (create_time >= '2020-01-08 03:00:00.0' and create_time < '2020-01-08 04:00:00.0') 
+or (update_time >= '2020-01-08 03:00:00.0' and update_time < '2020-01-08 04:00:00.0')
+
+--22
+
+
+;
+select
+count(distinct order_no)
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000 + 60 * 60 * 1) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-07 23' AND '2020-01-08 23'
+and `__table` = 'accounting_request_record_0001'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+where from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd')='2020-01-08' 
+;
+
+--9457
+
+select
+count(distinct order_no)
+from accounting_request_record_0001
+where (create_time >= '2020-01-07 23:00:00.0' and create_time < '2020-01-08 23:00:00.0') 
+or (update_time >= '2020-01-07 23:00:00.0' and update_time < '2020-01-08 23:00:00.0')
+
+--9457
+
+
+
+
+
+
+
+
+;
+select
+from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd HH') ,
+count(distinct order_no)
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-07 23' AND '2020-01-08 23'
+and `__table` = 'accounting_request_record_0030'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+where from_unixtime(cast(local_create_time as bigint) + 3600,'yyyy-MM-dd')='2020-01-08'
+group by from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd HH') 
+
+;
+1   2020-01-07 23	91
+2	2020-01-08 00	59
+3	2020-01-08 01	25
+4	2020-01-08 02	27
+5	2020-01-08 03	26
+6	2020-01-08 04	48
+
+
+select
+date_format(create_time,'%Y-%m-%d %H'),
+count(distinct(order_no))
+FROM 
+accounting_request_record_0030
+where 
+date_format(create_time,'%Y-%m-%d') = '2020-01-08'
+group by date_format(create_time,'%Y-%m-%d %H')
+;
+----------------------------------------+---------------------------+
+| 2020-01-08 00                          |                        59 |
+| 2020-01-08 01                          |                        25 |
+| 2020-01-08 02                          |                        27 |
+| 2020-01-08 03                          |                        26 |
+| 2020-01-08 04                          |                        48 |
+| 2020-01-08 05                          |                       131 |
+| 2020-01-08 06                          |                       280 |
+
+binlog和数据库都是utc时间，不用看时间的对应性了，utc时间数据量一样，转成拉各斯时间也就一样了。
+
+为什么binlog采集没有涉及更新时间？
+
+
+
+
+李楠：
+select
+from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd HH') ,
+count(distinct order_no)
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-07 23' AND '2020-01-09 00'
+and `__table` = 'accounting_request_record_0040'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+group by from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd HH') 
+
+;
+
+23开始
+
+select
+date_format(create_time,'%Y-%m-%d %H'),
+count(distinct(order_no))
+FROM 
+accounting_request_record_0040
+where 
+date_format(create_time,'%Y-%m-%d') = '2020-01-08'
+group by date_format(create_time,'%Y-%m-%d %H')
+;
+
+00开始
+
+
+问题：
+1.那个表数据源和我采集的表数据源不一致，是否业务上指标一定能对得上？
+2.如果存在疑问，最可取的方式就是通过和db数据相同数据源去验证，保证数据源和时间序列一致的情况下验证才是有意义的。
+
+谢东：
+ssh 1
+
+mysql -h 10.52.80.112 -P 3318 -udw_read_only -py^n#^qk3
+use opay_account;
+show tables;
+
+
+opt -----
+select count(*)
+from accounting_request_record_0000
+where (create_time >= '2019-11-25 23:00:00.0' and create_time < '2019-11-26 23:00:00.0') 
+or (update_time >= '2019-11-25 23:00:00.0' and update_time < '2019-11-26 23:00:00.0')
+
+
+
+
+楠哥，我现在忽然想起一个事，你之前给我的binlog去重逻辑里面，只是限制了创建时间，更新时间不用限制吗？
+已读
+你好好看下 ， __ts_ms是binlog产生时间戳
+去重没有业务字段判断
+
+
+
+ok
+airflow clear -s 2019-09-22 -e 2019-10-10 app_opay_life_payment_cube_d
+airflow backfill -x --rerun_failed_tasks -s 2019-09-22 -e 2019-10-10 app_opay_life_payment_cube_d
+
+
+
+
+
+================================================================================
+
+
+ods_binlog_base_accounting_request_record_hi   正在
+
+
+ods_binlog_base_account_user_record_hi
+
+
+
+
+show partitions opay_dw_ods.ods_binlog_base_accounting_request_record_hi
+--   8    10     14   15
+
+--  56    89     70   32
+;
+
+
+
+select
+from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd HH') ,
+count(distinct order_no)
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000) as local_create_time,
+ (cast(t.update_time as bigint)/1000) as local_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_account_user_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-08 00' AND '2020-01-08 23'
+and `__table` = 'account_user_record_0056'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+group by from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd HH') 
+
+;
+
+select
+date_format(create_time,'%Y-%m-%d %H'),
+count(distinct(order_no))
+FROM 
+account_user_record_0056
+where 
+date_format(create_time,'%Y-%m-%d') = '2020-01-08'
+or date_format(update_time,'%Y-%m-%d') = '2020-01-08'
+group by date_format(create_time,'%Y-%m-%d %H')
+;
+
+
+
+select
+count(distinct order_no)
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000) as local_create_time,
+ (cast(t.update_time as bigint)/1000) as local_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_account_user_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-08 00' AND '2020-01-08 23'
+and `__table` = 'account_user_record_0056'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt
+;
+
+
+
+select
+count(distinct(order_no))
+FROM 
+account_user_record_0056
+where 
+date_format(create_time,'%Y-%m-%d') = '2020-01-08'
+or date_format(update_time,'%Y-%m-%d') = '2020-01-08'
+;
+
+
+
+
+
+
+

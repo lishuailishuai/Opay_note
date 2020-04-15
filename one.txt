@@ -1,0 +1,70 @@
+
+
+alter table app_ocredit_phones_order_cube_d change column loan_amount_usd loan_amount_usd double
+
+ALTER TABLE app_ocredit_phones_order_base_cube_w ADD COLUMNS (pre_amount bigint comment '初审通过量',
+review_amount bigint comment '复审通过量')
+
+=======
+
+建表语句
+CREATE EXTERNAL TABLE ocredit_phones_dw.app_ocredit_phones_order_cube_d(  
+terms bigint comment '期数',
+opay_id bigint comment '用户opayID',
+date_entry string comment '进件日期',
+month_entry string comment '进件月份',
+week_entry string comment '进件周',
+loan_count bigint comment '放款量',
+loan_amount_USD bigint comment '贷款金额_USD'
+)
+COMMENT '订单汇总表'  
+PARTITIONED BY (   
+country_code string COMMENT '二位国家码',
+dt string COMMENT '分区时间'
+)
+STORED AS orc  
+LOCATION  
+ 'oss://opay-datalake/ocredit_phones/ocredit_phones_dw/app_ocredit_phones_order_cube_d'
+TBLPROPERTIES (  
+'orc.compress'='SNAPPY'
+);
+
+
+
+airflow test dwd_ocredit_phones_order_df dwd_ocredit_phones_order_df_task 2020-02-17 -sd 
+
+
+
+airflow test app_ocredit_phones_order_d app_ocredit_phones_order_d_task 2020-02-17 -sd 
+
+
+airflow test ocredit_phones_global_operate_report send_report 2020-02-19 -sd 
+
+
+
+
+
+
+airflow test ocredit_phones_global_operate_report send_report 2020-02-25 -sd
+
+
+
+
+
+mysql -h 3.11.0.38 -P 55005 -uread_only -py^n#^qk3
+
+mysql -h 3.11.0.38 -P 55006 -uread_only -py^n#^qk3
+
+
+
+
+
+
+
+
+
+
+
+
+
+

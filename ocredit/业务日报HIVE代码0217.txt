@@ -1,0 +1,79 @@
+
+
+---业务日报
+
+---当月进件日期维度
+SET mapreduce.job.queuename=root.data_bi; 
+select
+case when substr((case when order_id='012020011001240073' then '2020-01-04' else to_date(a.create_time) end),1,10) is not null 
+then substr((case when order_id='012020011001240073' then '2020-01-04' else to_date(a.create_time) end),1,10) else '合计' end as `进件日期`,
+count(distinct a.opay_id) as `进件数`,
+count(distinct case when a.order_status='81' then a.opay_id else null end)   `放款数` ,
+concat(round(count(distinct case when a.order_status='81' then a.opay_id else null end)/count(distinct a.opay_id)*100,2),'%')  as `进件-放款转化率`,
+round(sum(case when a.order_status='81' then (a.loan_amount/100)*0.2712/100 else 0 end),2)   `贷款金额_USD` ,
+round(sum(case when a.order_status='81' then (a.loan_amount/100)*0.2712/100 else 0 end)/count(distinct case when a.order_status='81' then a.opay_id else null end),2) as `件均_USD`,
+count(distinct case when a.terms = '3' then a.opay_id else null end) as `进件数_3期`,
+count(distinct case when a.order_status='81' and a.terms = '3' then a.opay_id else null end)   `放款数_3期` ,
+concat(round(count(distinct case when a.order_status='81' and a.terms = '3' then a.opay_id else null end)/count(distinct case when a.terms = '3' then a.opay_id else null end)*100,2),'%')  as `进件-放款转化率_3期`,
+round(sum(case when a.order_status='81' and a.terms = '3' then (a.loan_amount/100)*0.2712/100 else null end),2)   `贷款金额_USD_3期` ,
+round(sum(case when a.order_status='81' and a.terms = '3' then (a.loan_amount/100)*0.2712/100 else null end)/count(distinct case when a.order_status='81' and a.terms = '3' then a.opay_id else null end),2) as `件均_USD_3期`,
+
+count(distinct case when a.terms = '6' then a.opay_id else null end) as `进件数_6期`,
+count(distinct case when a.order_status='81' and a.terms = '6' then a.opay_id else null end)   `放款数_6期` ,
+concat(round(count(distinct case when a.order_status='81' and a.terms = '6' then a.opay_id else null end)/count(distinct case when a.terms = '6' then a.opay_id else null end)*100,2),'%')  as `进件-放款转化率_6期`,
+round(sum(case when a.order_status='81' and a.terms = '6' then (a.loan_amount/100)*0.2712/100 else null end),2)   `贷款金额_USD_6期` ,
+round(sum(case when a.order_status='81' and a.terms = '6' then (a.loan_amount/100)*0.2712/100 else null end)/count(distinct case when a.order_status='81' and a.terms = '6' then a.opay_id else null end),2) as `件均_USD_6期`
+
+from ocredit_phones_dw_ods.ods_sqoop_base_t_order_df a
+where a.dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+and substr((case when order_id='012020011001240073' then '2020-01-04' else to_date(a.create_time) end),1,7) = substr(date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1),1,7)
+and a.user_id not in 
+(
+'1209783514507214849', 
+'1209126038292123650',
+'1210903150317494274',
+'1214471918163460097',
+'1215642304343425026',
+'1226878328587288578')
+and a.business_type = '0'
+group by substr((case when order_id='012020011001240073' then '2020-01-04' else to_date(a.create_time) end),1,10)
+WITH ROLLUP
+order by  `进件日期`
+
+---以往各月日期维度
+SET mapreduce.job.queuename=root.data_bi; 
+select
+case when substr((case when order_id='012020011001240073' then '2020-01-04' else to_date(a.create_time) end),1,7) is not null 
+then substr((case when order_id='012020011001240073' then '2020-01-04' else to_date(a.create_time) end),1,7) else '合计' end as `进件月份`,
+count(distinct a.opay_id) as `进件数`,
+count(distinct case when a.order_status='81' then a.opay_id else null end)   `放款数` ,
+concat(round(count(distinct case when a.order_status='81' then a.opay_id else null end)/count(distinct a.opay_id)*100,2),'%')  as `进件-放款转化率`,
+round(sum(case when a.order_status='81' then (a.loan_amount/100)*0.2712/100 else 0 end),2)   `贷款金额_USD` ,
+round(sum(case when a.order_status='81' then (a.loan_amount/100)*0.2712/100 else 0 end)/count(distinct case when a.order_status='81' then a.opay_id else null end),2) as `件均_USD`,
+count(distinct case when a.terms = '3' then a.opay_id else null end) as `进件数_3期`,
+count(distinct case when a.order_status='81' and a.terms = '3' then a.opay_id else null end)   `放款数_3期` ,
+concat(round(count(distinct case when a.order_status='81' and a.terms = '3' then a.opay_id else null end)/count(distinct case when a.terms = '3' then a.opay_id else null end)*100,2),'%')  as `进件-放款转化率_3期`,
+round(sum(case when a.order_status='81' and a.terms = '3' then (a.loan_amount/100)*0.2712/100 else null end),2)   `贷款金额_USD_3期` ,
+round(sum(case when a.order_status='81' and a.terms = '3' then (a.loan_amount/100)*0.2712/100 else null end)/count(distinct case when a.order_status='81' and a.terms = '3' then a.opay_id else null end),2) as `件均_USD_3期`,
+
+count(distinct case when a.terms = '6' then a.opay_id else null end) as `进件数_6期`,
+count(distinct case when a.order_status='81' and a.terms = '6' then a.opay_id else null end)   `放款数_6期` ,
+concat(round(count(distinct case when a.order_status='81' and a.terms = '6' then a.opay_id else null end)/count(distinct case when a.terms = '6' then a.opay_id else null end)*100,2),'%')  as `进件-放款转化率_6期`,
+round(sum(case when a.order_status='81' and a.terms = '6' then (a.loan_amount/100)*0.2712/100 else null end),2)   `贷款金额_USD_6期` ,
+round(sum(case when a.order_status='81' and a.terms = '6' then (a.loan_amount/100)*0.2712/100 else null end)/count(distinct case when a.order_status='81' and a.terms = '6' then a.opay_id else null end),2) as `件均_USD_6期`
+
+from ocredit_phones_dw_ods.ods_sqoop_base_t_order_df a
+where a.dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+
+and a.user_id not in 
+(
+'1209783514507214849', 
+'1209126038292123650',
+'1210903150317494274',
+'1214471918163460097',
+'1215642304343425026',
+'1226878328587288578')
+and a.business_type = '0'
+group by substr((case when order_id='012020011001240073' then '2020-01-04' else to_date(a.create_time) end),1,7)
+WITH ROLLUP
+order by  `进件月份`

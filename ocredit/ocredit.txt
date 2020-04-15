@@ -1,0 +1,683 @@
+
+
+
+ocredit（手机分期、汽车抵押贷、房屋抵押贷）业务。
+ocredit是一条新的业务，区别于现有的出行，外卖，金融支付，线下收单业务；
+可以简单理解为通过有形介质进行分期或抵押贷款，通过利息进行盈利的商业模式
+ocredit消费金融下有手机分期（mobile phones installment）、汽车金融（auto financing）、租房分期（tenement installment）
+这三条业务线
+
+链接方式：Ocredit 
+
+IP:oloan-prod-slave-dw.cdpm388ickiy.eu-west-1.rds.amazonaws.com
+端口:3306
+用户名:read_only
+密码:y^n#^qk3
+
+现在的数据是在伦敦的，所以尼日利亚需要加1个小时时区，未来加纳业务就不用加，加纳和伦敦一个时区
+就是说业务数据是在伦敦直接产出的对吧。与尼日利亚没有关系对吧，嗯生产在伦敦，使用在不同国家不同时区
+
+业务当前都不提供时区字段，这个是最痛疼问题，这样业务数据不能自一个时钟内使用！
+可以加字段，最好先业务上线后，就带，要不在增加字段，我们都需要重新重跑数据。这个是当前所有业务线的问题
+加字段在城市配置表？每个核心表自己就要有，不是通过维表来处理
+如果没有就只能通过维表了。这样业务数据计算和重构的扩展性代价比较大，都是需要关联！
+
+嗯这块每天就几十条
+我这块目前考虑是全量采吧
+放款速度很慢
+也不会像打车那样起那么快
+
+
+ocredit消费金融下有手机分期（mobile phones installment）、汽车金融（auto financing）、租房分期（tenement installment）
+
+命名：
+
+ocredit_phones  代表 手机分期（mobile phones installment）
+
+ocredit_carfinance  代表 汽车金融（auto financing）
+
+ocredit_tenement 代表 租房分期（tenement installment）
+
+
+脚本可以opay采集。提交前我看一下
+
+
+
+
+手机需求童黎，汽车需求李爽随时提给我就好；我来安排排期实现；节后主要是ocredit 数据要入数仓，然后由更专业的技术团队为大家进行数据支持；
+
+以后每天定时10点推送
+
+
+现在开始考虑数据入数仓，有个问题，就是由于我们的数据生产环节在伦敦，数据使用将会在尼日利亚（东1时区），加纳（0时区）；我们最基础的订单表中有国家、城市、货币字段，但是随着国际化业务的逐步开展，数据的准确性会受时区的影响；所以在生产数据的表里增加上时区字段；
+
+这样数据采集，加工，使用的时候才符合不同国家看数据的需求；
+
+时区问题当时我们内部讨论过。
+也跟集团的DBA讨论过，并且结合了兄弟部门的一些经验。
+最终采用了0时区。
+国际化到最后每个国家的时区都不一样，针对这些情况我们系统在展示层面是有统一转换的。
+你们从DB拉数据我建议也针对不同的数据源统一做转换，而不是我们额外添加时区字段。
+
+
+这个问题很好，现在就是各种不规范，如何规范了，才可以让所有的用户才能看到对的数据；如果我这边提供一份城市code编码规则；你们直接使用；我这边就可以建立起你们业务和大数据直接的桥梁，保障时区问题的解决；
+
+
+至于公司的其他业务线的规范工作，需要对应业务的人去考虑了
+
+每条线业务已经在跑起来了，如果只是局部规范没有任何意义，全局抽取数据建立数仓的意义也就不大了。
+我建议还是BI可以统一先出一套规范，跟各个业务线达成一致。大家都认为没有问题，我们分步骤，前后脚按计划去接入规范。
+
+其他线目前只在尼日利亚开展业务我知道的
+手机跟汽车都是在尼日
+那就2月不用考虑时区问题，正常采用拉各斯时区统计数据。
+
+
+ocredit 的需求开发，你就开始更进吧。有问题及时咨询
+你整理一下ocredit业务线，本周语音对一下需求，给我讲一下
+
+
+
+
+
+
+
+
+
+airflow test dwd_opay_client_event_base_di dwd_opay_client_event_base_di_task 2020-02-12 -sd ./dwd_opay_client_event_base_di.py
+
+
+
+
+
+
+
+ALTER TABLE ocredit_phones_dw_ods.ods_sqoop_base_t_order_audit_history_df ADD COLUMNS (`update_time` string comment '修改日期',
+`remark` string comment '备注')
+
+
+
+user_id	是销售id 而不是用户id
+
+
+select * from oride_source.opay_ep_logv0 limit 1
+2020-02-11T06:07:47.972Z	
+{"beat":"filebeat","topic":"opay-ep-logv0","type":"_doc","version":"7.1.0"}	
+{"type":"opay","msg":"{\"common\":{\"user_id\":\"156619082667392500\",\"user_number\":\"8168870431\",\"client_timestamp\":\"1581401266\",\"platform\":\"Android\",\"os_version\":\"28\",\"app_name\":\"opay\",\"app_version\":\"2.19.2.278\",\"locale\":\"en\",\"device_id\":\"fe0f19c5e07a45a6bcfa0c2bf48a69bd\",\"device_screen\":\"720x1440\",\"device_model\":\"Infinix X650B\",\"device_manufacturer\":\"INFINIX MOBILITY LIMITED\",\"is_root\":\"false\",\"channel\":\"\",\"subchannel\":\"\",\"gaid\":\"e125924c-e9de-4a94-9a8d-f3063bbbfeaa\",\"appsflyer_id\":\"1573248739341-5136086691881942960\",\"city_code\":\"\"}
+,\"events\":[{\"event_name\":\"COMMON_home_balance_display\",\"event_time\":\"1581401114547\",\"event_value\":\"{\\\"state\\\":\\\"false\\\"}\"},{\"event_name\":\"COMMON_home_page_request\",\"event_time\":\"1581401114618\",\"event_value\":\"{}\"},{\"event_name\":\"COMMON_home_balance_display\",\"event_time\":\"1581401114661\",\"event_value\":\"{\\\"state\\\":\\\"false\\\"}\"},{\"event_name\":\"COMMON_home_balance_display\",\"event_time\":\"1581401114668\",\"event_value\":\"{\\\"state\\\":\\\"false\\\"}\"},{\"event_name\":\"COMMON_home_page_request\",\"event_time\":\"1581401114691\",\"event_value\":\"{}\"},{\"event_name\":\"COMMON_home_balance_display\",\"event_time\":\"1581401114699\",\"event_value\":\"{\\\"state\\\":\\\"false\\\"}\"},{\"event_name\":\"COMMON_home_balance_display\",\"event_time\":\"1581401114710\",\"event_value\":\"{\\\"state\\\":\\\"false\\\"}\"},{\"event_name\":\"opay_show\",\"event_time\":\"1581401114711\",\"event_value\":\"{}\"},{\"event_name\":\"COMMON_home_page_request\",\"event_time\":\"1581401115150\",\"event_value\":\"{}\"},{\"event_name\":\"COMMON_home_balance_display\",\"event_time\":\"1581401115192\",\"event_value\":\"{\\\"state\\\":\\\"false\\\"}\"},{\"event_name\":\"COMMON_home_balance_display\",\"event_time\":\"1581401115197\",\"event_value\":\"{\\\"state\\\":\\\"false\\\"}\"},{\"event_name\":\"COMMON_pay_service_TRANSFER\",\"event_time\":\"1581401121137\",\"event_value\":\"{\\\"name\\\":\\\"TRANSFER\\\",\\\"from\\\":\\\"pay_service\\\"}\"},{\"event_name\":\"transfer_person_show\",\"event_time\":\"1581401121445\",\"event_value\":\"{}\"},{\"event_name\":\"transfer_person_show\",\"event_time\":\"1581401121720\",\"event_value\":\"{}\"},{\"event_name\":\"transfer_bank_show\",\"event_time\":\"1581401121720\",\"event_value\":\"{}\"},{\"event_name\":\"transfer_bank_show\",\"event_time\":\"1581401121724\",\"event_value\":\"{}\"},{\"event_name\":\"transfer_bank_done_click\",\"event_time\":\"1581401173582\",\"event_value\":\"{\\\"recipient_phone_number\\\":\\\"\\\",\\\"account_number\\\":\\\"0021904784\\\",\\\"amount\\\":\\\"200\\\",\\\"bank_name\\\":\\\"Guaranty Trust Bank\\\",\\\"message\\\":\\\"\\\"}\"},{\"event_name\":\"COMMON_pay_window_show\",\"event_time\":\"1581401175699\",\"event_value\":\"{\\\"service_type\\\":\\\"bank\\\"}\"},{\"event_name\":\"COMMON_pay_window_complete_transaction_click\",\"event_time\":\"1581401178511\",\"event_value\":\"{\\\"service_type\\\":\\\"bank\\\",\\\"actual_amount\\\":\\\"200.0\\\",\\\"pay_using\\\":\\\"0\\\"}\"},{\"event_name\":\"net_type_4G\",\"event_time\":\"1581401193968\",\"event_value\":\"{\\\"net_type\\\":\\\"4G\\\"}\"}]}"}	
+
+
+select get_json_object(aa,'$.common.app_version')
+from(
+select 
+get_json_object(message, '$.msg') aa
+from 
+oride_source.opay_ep_logv0
+where
+dt='2020-02-12' and hour=04
+and get_json_object(message, '$.type') ='opay'
+) b
+where get_json_object(aa,'$.common.app_version')='2.25.3.356'
+limit 1
+
+
+因为有一个双引号，"msg":"{\"commo，msg是个string，需要两次解析
+
+
+分期付款是先付一部分钱,拿到手机后按分的期数付款即可
+
+
+手机和汽车业务用户管理表 ：admin_guns  admin_auto
+
+
+全量采集订单表的时候，做一下指标查询，订单号是不需要进行去重的，对吧，订单号在一天中，始终是唯一的
+select *
+from opay_dw.dwd_opay_transaction_record_di
+where order_no='200108014533169289'--看创建时间和更新时间
+不管是增量还是全量，订单号都是唯一
+
+
+看一下h5小时，什么时候跑与代码中的开始日期
+
+
+select city_id,month,'dd' from oride_dw.dwm_oride_passenger_act_m limit 2
+select city_id,month,'dd' from oride_dw.dwm_oride_passenger_act_m group by city_id,month limit 2
+select city_id,month,'dd' from oride_dw.dwm_oride_passenger_act_m group by city_id,month,'dd' limit 2
+常量是不需要group by 的（代码中的dt就是常量）
+
+
+
+
+====================================
+====================================
+====================================
+====================================
+====================================
+====================================
+
+待偿金额：截止统计时点，尚未偿还的本金总金额（不包括利息部分）
+逾期金额：截止统计时点，所有逾期的且尚未偿还的本金金额总和
+项目逾期率：截止统计时点，当前所有处于逾期状态的项目数/尚未偿还交易总笔数
+金额逾期率：截止统计时点，逾期金额/待偿金额之比
+逾期项目数（笔）：截止统计时点，逾期且尚未足额偿还的项目数
+
+
+user_id不是用户Id,而是销售id,决定用户，是pay_id
+
+
+select from_unixtime(cast(unix_timestamp('2019-12-28 14:55:28.0')+3600 as bigint),'yyyy-MM-dd HH:mm:ss')
+select from_unixtime(unix_timestamp('2019-12-28 14:55:28.0')+3600 ,'yyyy-MM-dd HH:mm:ss')
+结果一样
+
+select from_unixtime(unix_timestamp('null')+3600,'yyyy-MM-dd HH:mm:ss')   返回值就是null
+
+
+
+
+mysql连续输出日期的写法
+select * from 
+(SELECT DATE_FORMAT(DATE_SUB(NOW(), INTERVAL xc day), '%Y-%m-%d') as date
+FROM ( 
+			SELECT @xi:=@xi+1 as xc from 
+			(SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) xc1, 
+			(SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) xc2, 
+			(SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) xc3,
+				(SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) xc4,
+			(SELECT @xi:=0) xc0 --=-1
+) xcxc) k where k.date>='2019-12-23'
+输出日期到今天的前一天  -1就是到今天了
+
+
+同一个用户买手机是要进件多次的，但最终只会成功一次
+
+
+
+
+同一个用户opay_Id,
+可以进件多次，在订单表中，订单号不一样，user_id(销售员)不一样，opay_id一样，订单状态不一样
+
+
+
+select
+opay_id,count(*)
+from
+dwd_ocredit_phones_order_df 
+where order_status=81
+and dt='2020-02-19'
+group by opay_id
+having count(*)>=2
+-- 0   一个用户只能进件成功一次，也就是只能分期买一个手机，  不存在一个用户买多个手机的情况
+
+
+ods全量采集
+dwd现在是全量，如果改成增量，那么dwd表就都是增量，不能前面是全量，后面是增量，而且要改成增量，
+以后的指标就不用限制日期了，直接from表就行，但有个问题就是要回溯之前日期的数据。
+
+
+
+select cast('123' as bigint)
+select cast(123 as string);
+可以的
+from_unixtime(unix_timestamp(create_time)+3600,'yyyy-MM-dd HH:mm:ss'), --创建时间 
+当然也是可以的
+
+
+
+select
+          terms,--分期数
+          opay_id, --用户opayId
+          count(distinct case when order_status='81' then opay_id else null end), --   `放款数` ,
+          sum(case when order_status='81' then (loan_amount/100)*0.2712/100 else 0 end),--`贷款金额_USD` ,
+          date_of_entry,--进件日期
+          'nal' as country_code,
+          dt
+          from
+          ocredit_phones_dw.dwd_ocredit_phones_order_df
+          where dt='{pt}'
+          group by terms,date_of_entry,dt,opay_id-----常量是不需要进行group by的
+
+
+1.采集时间晚？
+2。进件成功只能一次，一个用户只能买一个手机？
+3.100元，70%。   30首付款，70为本金也就是贷款额，还要付服务费，利息。。。。
+
+
+注意：重点：
+group by 后面的字段就是纬度，按照纬度进行分组统计。
+
+
+
+WITH ROLLUP:在group by 的基础之上进行汇总
+并不是group by结果的简单加和，是WITH ROLLUP之前的条件前提上进行全局汇总，和group by字段无关，
+一般不涉及去重问题，就是group by结果的简单加和。
+
+
+select
+case when date_entry is not null then date_entry else '合计' end as bbbbb,
+count(distinct opay_id) as in_entries,
+sum(loan_count) as loan_count,
+concat(round(sum(loan_count)/count(distinct opay_id)*100,2),'%') as business_rate,
+round(sum(loan_amount_usd),2) as loan_amount_usd,
+round(sum(loan_amount_usd)/sum(loan_count),2) as average_usd,
+
+
+count(distinct case when terms=3 then opay_id else null end) as in_t_entries,
+sum(case when terms=3 then loan_count else null end) as loan_t_count,
+concat(round(sum(case when terms=3 then loan_count else null end)/count(distinct case when terms=3 then opay_id else null end)*100,2),'%') business_t_rate,
+round(sum(case when terms=3 then loan_amount_usd else null end),2) as loan_amount_t_usd,
+round(sum(case when terms=3 then loan_amount_usd else null end)/sum(case when terms=3 then loan_count else null end),2) as average_t_usd,
+
+
+count(distinct case when terms=6 then opay_id else null end) as in_s_entries,
+sum(case when terms=6 then loan_count else null end) as loan_s_count,
+concat(round(sum(case when terms=6 then loan_count else null end)/count(distinct case when terms=6 then opay_id else null end)*100,2),'%') business_s_rate,
+round(sum(case when terms=6 then loan_amount_usd else null end),2) as loan_amount_s_usd,
+round(sum(case when terms=6 then loan_amount_usd else null end)/sum(case when terms=6 then loan_count else null end),2) as average_s_usd
+
+
+from ocredit_phones_dw.app_ocredit_phones_order_d 
+where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+and substr(date_entry,1,7) = substr(date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1),1,7)
+group by date_entry
+（通常，类似这种case when ,group by 只需要写字段即可，不需要写完整case when ,
+一般情况下，两者的效果一样，但最好是一个字段，因为这里，
+如果是完整，能是null，不能转换成‘合计’,而且是第一行）
+WITH ROLLUP
+order by bbbbb
+
+
+
+app层那个可以设计成一个表,设计成一个表的话，就加维度就好了 做成cube表
+
+
+
+
+select
+case when substr(date_entry,1,7) is not null then substr(date_entry,1,7) else '合计' end as month_entry,
+count(distinct opay_id) as in_entries,
+sum(loan_count) as loan_count,
+concat(round(sum(loan_count)/count(distinct opay_id)*100,2),'%') as business_rate,
+round(sum(loan_amount_usd),2) as loan_amount_usd,
+round(sum(loan_amount_usd)/sum(loan_count),2) as average_usd,
+
+
+count(distinct case when terms=3 then opay_id else null end) as in_t_entries,
+sum(case when terms=3 then loan_count else null end) as loan_t_count,
+concat(round(sum(case when terms=3 then loan_count else null end)/count(distinct case when terms=3 then opay_id else null end)*100,2),'%') business_t_rate,
+round(sum(case when terms=3 then loan_amount_usd else null end),2) as loan_amount_t_usd,
+round(sum(case when terms=3 then loan_amount_usd else null end)/sum(case when terms=3 then loan_count else null end),2) as average_t_usd,
+
+
+count(distinct case when terms=6 then opay_id else null end) as in_s_entries,
+sum(case when terms=6 then loan_count else null end) as loan_s_count,
+concat(round(sum(case when terms=6 then loan_count else null end)/count(distinct case when terms=6 then opay_id else null end)*100,2),'%') business_s_rate,
+round(sum(case when terms=6 then loan_amount_usd else null end),2) as loan_amount_s_usd,
+round(sum(case when terms=6 then loan_amount_usd else null end)/sum(case when terms=6 then loan_count else null end),2) as average_s_usd
+
+
+from ocredit_phones_dw.app_ocredit_phones_order_d 
+where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+group by substr(date_entry,1,7)--这是可以的哦
+WITH ROLLUP
+order by  month_entry
+
+
+
+
+select sum('37%') =0
+
+select sum('37')=37
+
+select date('2020-02-19 03:23:30')  --2020-02-19
+
+
+将数值X转换成"#,###,###.##"格式字符串，并保留d位小数，如果d为0，将进行四舍五入且不保留小数
+
+format_number(number x, int d)
+
+
+a表(group by bb)----在a表进行指标查询的时候，因为该表只是取出了要的纬度，所以指标查询，计算结果要进行累加
+  底层b表（group by aa,bb,cc）
+
+
+ concat_ws('-',regexp_replace(substr(minweek_of_entry,6,10),'-',''),regexp_replace(substr(date_add(minweek_of_entry,6),6,10),'-','')) as dateweek_of_entry, --所在周日期区间
+
+
+
+
+left join 本质：以左表为基准
+用左表的每一条数据去匹配右表所有数据，有则显示，都匹配不上就显示为null
+多表Join，a left join b on a.id=b.id left join  b.id=c.id    
+         a left join b on a.id=b.id left join  a.id=c.id  两者不一样
+
+员工表  left join 老板表             一个老板有多个员工     一个员工只能属于一个老板
+
+
+
+select order_id,user_id,pay_id,current_period,repayment_time,real_repayment_time from
+ocredit_phones_dw_ods.ods_sqoop_base_t_repayment_detail_df 
+where dt='2020-02-26'
+limit 100
+
+还款明细表:这里的user_id就是客户吧
+订单号，user_id一样，当前还款期数不一样
+如果实际还款了，也就是有值，不为null，那么pay_id就有值（唯一），就不为null了。
+如果为3期，那么三个的创建时间也是一样的，创建时间也就是进件成功时间，那么开始的第一个还款是在创建时间所在月的下一个月
+
+
+
+
+select date('2020-02-01 01:23:23')
+2020-02-01
+和to_date效果一样
+
+
+select current_date()--2020-02-28
+
+
+
+1.产品提出需求，目前只做dwd,app不进行入仓,
+app的话，目前要什么，给什么字段，额外的汇总指标字段就先不要加了，以后再要，再在app表加字段。
+2.a/b最终指标，app只需要统计出a和b即可，最终的除/，在出报表的时候再出。
+3.app就要做到最终的sum汇总，不能再在出报表的时候再进行group by sum
+4.app根据纬度汇总，为避免再出报表汇总，用grouping sets  将结果union all在一起  后按周，按期数和周汇总在一张报表中，要
+union all在一起，再根据统一的纬度进行group by sum汇总在一起，就把null值都去掉了。
+5.天粒度，周粒度，月粒度
+6.做到app，根据要出的报表，要什么纬度，你就加什么纬度，也就是group by的字段
+7.直接用ods最新日期动态分区补历史数据
+8.那么，什么情况，表需要入仓，入仓各个层怎么设计，以及额外的字段加吗？
+
+
+
+select
+from( ) b
+where b.aa is not null
+
+select
+from( ) b
+
+两者效果一样，这是bug，你可以在子查询里面把null转换成数字，再进行where判断
+
+
+
+
+------------可以
+select 
+terms
+from(
+select terms,dt from ocredit_phones_dw.app_ocredit_phones_order_base_cube_d 
+) bb
+
+------------不可以
+select 
+terms
+from(
+select terms rr,dt from ocredit_phones_dw.app_ocredit_phones_order_base_cube_d 
+) bb
+
+
+------------不可以
+select 
+bb.terms
+from(
+select terms rr,dt from ocredit_phones_dw.app_ocredit_phones_order_base_cube_d 
+) bb
+
+------------不可以
+select 
+terms
+from(
+select terms rr,dt from ocredit_phones_dw.app_ocredit_phones_order_base_cube_d 
+) bb
+
+
+-------------可以
+select 
+bb.rr
+from(
+select terms rr,dt from ocredit_phones_dw.app_ocredit_phones_order_base_cube_d 
+) bb
+
+-------------可以
+select 
+rr
+from(
+select terms rr,dt from ocredit_phones_dw.app_ocredit_phones_order_base_cube_d 
+) bb
+
+
+有别名，你就用别名就可以
+
+
+
+
+
+select 
+regexp_extract('[{"bssid":"6C:59:40:21:05:C4","ssid":"MERCURY_05C4"},]','^\\[(.+)\\]$',1)
+--{"bssid":"6C:59:40:21:05:C4","ssid":"MERCURY_05C4"},
+
+
+语法:    regexp_extract(string subject,  string pattern,  int index)
+
+返回值: string
+
+说明：  将字符串subject按照pattern正则表达式的规则拆分，返回index指定的字符。
+
+第一参数：   要处理的字段
+
+第二参数:    需要匹配的正则表达式
+
+第三个参数:
+
+0是显示与之匹配的整个字符串
+1 是显示第一个括号里面的
+2 是显示第二个括号里面的字段...
+ 
+
+注意，在有些情况下要使用转义字符（双斜杠了‘\\’）。
+
+
+select regexp_extract('hitdecisiondlist','(i)(.*?)(e)',0) ;
+
+结果：itde
+
+select regexp_extract('hitdecisiondlist','(i)(.*?)(e)',1) ;
+
+结果：i
+
+select regexp_extract('hitdecisiondlist','(i)(.*?)(e)',2) ;
+
+结果：td
+
+select regexp_extract('x=a3&x=18abc&x=2&y=3&x=4','x=([0-9]+)([a-z]+)',2) from default.dual;
+
+结果：abc
+
+ ^	匹配一个输入或一行的开头，/^a/匹配"an A"，而不匹配"An a"
+$	匹配一个输入或一行的结尾，/a$/匹配"An a"，而不匹配"an A"
+
+
+() 和 [] 有本质的区别
+
+() 内的内容表示的是一个子表达式，() 本身不匹配任何东西，也不限制匹配任何东西，只是把括号内的内容作为同一个表达式来处理，例如 (ab){1,3}，就表示 ab 一起连续出现最少 1 次，最多 3 次。如果没有括号的话，ab{1,3} 就表示 a，后面紧跟的 b 出现最少 1 次，最多 3 次。另外，括号在匹配模式中也很重要。这个就不延伸了，有兴趣可以自己查查。
+
+[] 表示匹配的字符在 [] 中，并且只能出现一次，并且特殊字符写在 [] 会被当成普通字符来匹配。例如 [(a)]，会匹配 (、a、)、这三个字符。
+
+所以 ()、[] 无论是作用还是表示的含义，都有天壤之别。
+
+
+
+ set hive.exec.parallel=true;
+    set hive.exec.dynamic.partition.mode=nonstrict;
+
+    INSERT overwrite TABLE ocredit_phones_dw.{table} partition(country_code,dt)
+    select nvl(terms,-10000) as terms,
+           nvl(week_of_entry,'-10000') as week_of_entry,
+           concat_ws('-',regexp_replace(substr(minweek_of_entry,6,10),'-',''),regexp_replace(substr(date_add(minweek_of_entry,6),6,10),'-','')) as dateweek_of_entry, --所在周日期区间
+           entry_cnt, --进件量
+           loan_cnt,  --`放款数` ,
+           loan_amount_usd, --`贷款金额_USD` 
+           pre_amount,-- `初审通过量`
+           review_amount,-- `复审通过量`
+           'nal' as country_code,
+           '{pt}' as dt
+    from(select terms,--分期数
+          weekofyear(date_of_entry) as week_of_entry, --进件日期所在周
+          min(date_of_entry) as minweek_of_entry, --进件日期所在周对应最小日期
+          max(date_of_entry) as maxweek_of_entry, --进件日期所在周对应最大日期
+          count(distinct opay_id) as entry_cnt, --进件量
+          count(distinct (if(order_status='81',opay_id,null))) as loan_cnt, --`放款数` ,
+          sum(if(order_status='81',(nvl(loan_amount,0)/100)*0.2712/100,0)) as loan_amount_usd, --`贷款金额_USD` 
+          count(distinct case when order_status not in (10,12,13,99) then opay_id else null end) as pre_amount,-- `初审通过量` 
+          count(distinct case when order_status not in (10,11,12,13,30,32,99) then opay_id else null end) as review_amount -- `复审通过量`
+    from ocredit_phones_dw.dwd_ocredit_phones_order_base_df
+    where dt='{pt}'
+    and weekofyear(dt)-weekofyear(date_of_entry)>=0  --跨年后来考虑
+    and weekofyear(dt)-weekofyear(date_of_entry)<4
+    group by terms,weekofyear(date_of_entry)
+    grouping sets(weekofyear(date_of_entry),
+          (terms,weekofyear(date_of_entry)))
+          ) t;
+
+
+
+
+
+select from_unixtime(1578712124)--2020-01-11 03:08:44
+
+
+
+你进件成功，就会给你放款，还款的第一期是在你创建订单时间的下一个月
+比如1.2买的，第一个分期需要在2.2还（也就是第一期的预计还款时间）
+所以说放款月（买的月份）是第一分期预计还款月的前一个月
+一个月的差值
+
+
+0未还清，1还款中，2逾期，3已还清
+0一般是没有到期的还款每个月或者每日
+1的订单比较少
+毕竟是个中间态
+0,2,3
+是还款清单中的三种常用状态
+
+
+日历表怎么关联使用，纬度表
+
+CPDx+%=现存逾期x+合同/放款到期x+合同
+就是现在逾期的合同数量/同源数据下到期合同数量
+CPD3+%就是现存逾期3天+的合同数量/到期有3天以上表现的合同数量
+基于同源数据
+
+为什么t2表中，逾期天数的计算，如果还钱，逾期怎么就直接给定为0了
+还钱也有可能会逾期呀
+
+T2表只计算现存逾期
+T3表只计算首期逾期
+T2表只计算现存逾期，状态只有逾期和未逾期，不需要考虑逾期已还
+T2表只计算现存逾期，状态只有逾期和未逾期，不需要考虑逾期已还，状态3标识已还款，状态2标识逾期中，状态0标识待还款
+简单点可以只限制where 后还款状态=2就行
+缺少中间表，后续复用这个表
+所以写的有点杂
+后期计算入催报表的时候会用到
+
+为什么现存逾期不需要考虑逾期已还
+风控指标而已
+打算放到催收日报中
+逾期入催和催回情况那里会详细统计
+现存逾期只是一个结果指标，首期逾期是过程指标
+
+之前所说，用户只会成功进件一个，意味着用户只能买一个手机吗
+合同期内吧
+有准入限制
+一般三个月内是不允许的
+
+
+@洪锋   
+1、hive 使用我们只是负责帮忙优化，但是无法教育所有人的使用，特别是新入职的人。而且无法限定大家写SQL 的逻辑。
+2、大家使用的指标，应该是完善到数仓模型中，减少他们的使用资源。但是新业务上线，无法将流程性、系统性指标加工到数仓，只能开放数据源。
+3、近期我们出一个hive sql  使用规范和优化的模板
+
+总之，还是需要运维和我们 共同 制定 双重管理。
+
+oss路径的内容，会被覆盖的，再次运行，不需要删除重新运行
+
+
+
+
+set hive.exec.parallel=true;
+    set hive.exec.dynamic.partition.mode=nonstrict;
+
+    INSERT overwrite TABLE ocredit_phones_dw.{table} partition(country_code,dt)
+    
+    select
+          terms,--分期数
+          count(distinct opay_id), --进件数量
+          date_of_entry,--进件日期
+          substr(date_of_entry,1,7),--进件月份
+          concat(date_add(next_day(date_of_entry,'MO'),-7),'_',date_add(next_day(date_of_entry,'MO'),-2)),--进件周
+          count(distinct case when order_status='81' then opay_id else null end), --   `放款数` ,
+          round(sum(case when order_status='81' then (loan_amount/100)*0.2712/100 else 0 end),2),--`贷款金额_USD` ,
+          'nal' as country_code,
+          '{pt}' as dt
+          from
+          ocredit_phones_dw.dwd_ocredit_phones_order_di
+          group by terms,date_of_entry,substr(date_of_entry,1,7),concat(date_add(next_day(date_of_entry,'MO'),-7),'_',date_add(next_day(date_of_entry,'MO'),-2))
+          grouping sets(
+          date_of_entry,
+          concat(date_add(next_day(date_of_entry,'MO'),-7),'_',date_add(next_day(date_of_entry,'MO'),-2)),
+          substr(date_of_entry,1,7),
+          (terms,date_of_entry),
+          (terms,concat(date_add(next_day(date_of_entry,'MO'),-7),'_',date_add(next_day(date_of_entry,'MO'),-2))),  
+          (terms,substr(date_of_entry,1,7))
+          )
+
+
+
+
+select 3/0;---结果为null
+
+select 0/3;---结果为0
+
+nvl(concat(round(existing_overdue_cnt/existing_expire0_cnt*100,2),'%'),''),--CPD0+%
+
+concat(round(sum(case when t1.overdue_days >0 then t1.due_capital_amount else null end)/sum(case when t1.fzrq >0 then t1.due_capital_amount else null end)*100,2),'%') as `T+1%`,
+
+如果计算结果为null,那么整体就为null了。
+
+
+select  date_add(trunc(current_date(),'MM'),-1)--2020-02-29
+ select current_date()--2020-03-11
+ 
+ select from_unixtime(unix_timestamp())--2020-03-11 06:59:13
+
+
+ select 
+case 
+when 3>3 then 3 
+when 4=4 then 4 
+end 
+--4    
+
+select  
+case 4 
+when 3 then 3  
+when 4 then 4  
+end
+--4(默认只能是=，只能是这种写法，不能when =4或者 when >4 这是错误的)
+
+select 
+case 'hello'
+when 'helloo' then 3 
+when 'hello' then 4 
+end 
+--4  
+
+
+
+
+
+
+
+
+
+

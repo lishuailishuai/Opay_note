@@ -1,0 +1,316 @@
+日期  --
+业务线 --
+城市  --
+GMV --
+成本-B补金额 --
+成本-C补金额 --
+收入-平台抽成收入 实付金额+使用的优惠券金额-司机价格；订单状态条件为5；产品线（1，2，3，4）
+收入-罚款收入 取消罚款盈余+投诉罚款
+收入-摩托车份子钱收入 扣缴的摩托车账户的份子钱，限制条件为余额大于0，
+收入-手机还款 手机贷款还款金额，条件：产品线产品线（1，2，3，4），限定资金调整原因为6；
+收入-补录份子钱  补录还款的金额，条件：产品线产品线（1，2，3，4），限定资金调整原因为1；
+收入-财务小项 其他相关的调整金额项，条件：产品线产品线（1，2，3，4），限定资金调整原因为(2,8,9,10,15,16,17,18)；
+手机数量  骑手手机个数，条件：业务线Id=1，  资产分类=1，资产状态不等于99；
+摩托车数量 摩托车个数，条件：业务线Id=1，资产ID为14，资产状态不等于99；
+司机日均收入  司机价格driver+price，条件：订单状态为5；产品线（1，2，3，4）
+日均订单价格  订单价格price,条件：订单状态为5；产品线（1，2，3，4）
+
+
+
+C补跟GMV一样、平台抽成比GMV还要大很多、手机还款(理论)、补录份子钱
+
+
+
+
+
+
+
+ --1、GMV、成本-C补金额 
+CREATE TABLE test_db.wgj_gmv_c as
+WITH t1 AS (
+  SELECT  a.dt,
+          a.product_id,
+          a.GMV1 + nvl(b.quxiao_fee, 0) AS GMV, 
+          a.c_bu AS cost_c
+  FROM (
+      SELECT  dt,  
+              product_id,
+              SUM(price+nvl(tip,0)+nvl(pay_surcharge,0)) AS GMV1, 
+              SUM(price+nvl(pay_surcharge,0)+nvl(tip,0)) - SUM(pay_amount) AS c_bu
+      FROM oride_dw.dwd_oride_order_base_include_test_di t
+      WHERE   dt >= date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3)
+          AND dt <= date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+          AND pay_status = 1
+          AND status = 5
+          AND city_id!=999001
+          AND product_id IN (1, 2,3,4)
+          AND pay_mode in(2,3,4,5)
+      GROUP BY dt,product_id
+  ) a
+    LEFT JOIN (
+      SELECT  dt, 
+              product_id,
+              SUM(falsify), 
+              SUM(falsify_driver_cancel),
+              SUM(falsify) + SUM(falsify_driver_cancel) AS quxiao_fee
+      FROM oride_dw.dwd_oride_order_base_include_test_di
+      WHERE dt BETWEEN date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) AND date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+      GROUP BY dt,product_id
+   ) b
+   ON a.dt = b.dt and a.product_id=b.product_id
+ )
+SELECT  dt, 
+        product_id,
+        SUM(GMV) AS gmv, 
+        SUM(cost_c) AS cost_c
+FROM  t1
+GROUP BY  dt, product_id
+ORDER BY  dt, product_id;
+
+--2、成本-B补金额 reward+adjustment
+CREATE TABLE test_db.wgj_b as
+with t1 as
+(
+    SELECT  from_unixtime(a.day+3600, "yyyy-MM-dd") dt,
+            b.product_id,
+            sum(a.amount_reward) as reward
+    FROM  oride_dw_ods.ods_sqoop_base_data_driver_records_day_df a
+        left outer join (
+            select distinct 
+                  driver_id,
+                  product_id 
+              from oride_dw.dim_oride_driver_base 
+            where product_id in (1,2,3,4) 
+                and city_id!=999001 
+                and dt=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+        ) b on a.driver_id=b.driver_id
+    WHERE from_unixtime(a.day+3600, "yyyy-MM-dd") between date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) and date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+          and b.driver_id is not null
+          and a.dt =date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+    group by from_unixtime(a.day+3600, "yyyy-MM-dd"),b.product_id
+),
+t2 as
+(
+    SELECT  from_unixtime(a.created_at+3600, "yyyy-MM-dd") dt,
+            b.product_id,
+            sum(a.amount) as adjustment
+    FROM oride_dw_ods.ods_sqoop_base_data_driver_recharge_records_df a
+    left outer join (select distinct driver_id,product_id from oride_dw.dim_oride_driver_base where product_id in (1,2,3,4) and city_id!=999001 and dt=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)) b
+    on a.driver_id=b.driver_id
+    WHERE from_unixtime(a.created_at+3600, "yyyy-MM-dd")  between date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) and date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+    and b.driver_id is not null
+    and a.amount_reason IN (4,5,7)
+    and a.dt =date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+    group by from_unixtime(a.created_at+3600, "yyyy-MM-dd"),b.product_id
+)
+select t1.dt,t1.product_id,(t1.reward+t2.adjustment) b_subside
+from t1 
+inner join t2
+on t1.dt=t2.dt and t1.product_id=t2.product_id
+order by t1.dt,t1.product_id;
+
+--3、平台抽成
+--收入-平台抽成收入 实付金额+使用的优惠券金额-司机价格；订单状态条件为5；产品线（1，2，3，4）
+CREATE TABLE test_db.wgj_take_rate as
+with t1 as(
+select order_id,driver_price,price,product_id,dt
+from oride_dw.dwd_oride_order_base_include_test_di
+where product_id in (1,2,3,4) 
+and city_id!=999001
+and status=5
+and dt BETWEEN date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) AND date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+),
+t2 as(
+select id,dt,amount,coupon_amount
+from oride_dw_ods.ods_sqoop_base_data_order_payment_df 
+where dt = date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+union 
+select id,dt,amount,coupon_amount
+from oride_dw_ods.ods_sqoop_base_data_order_payment_history_df 
+where dt = date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+)
+
+select dt, product_id,sum(amount+coupon_amount-driver_price) take_rate from
+( 
+ select distinct t1.dt,
+ t1.product_id,
+ t1.order_id,
+ t1.price,
+ t1.driver_price,
+ t2.amount,
+ t2.coupon_amount
+ from t1
+ inner join t2
+ on t1.order_id=t2.id 
+)a
+group by dt,product_id
+order by dt,product_id;
+
+
+--4、手机还款
+--收入-手机还款 手机贷款还款金额，条件：产品线产品线（1，2，3，4），限定资金调整原因为6；
+CREATE TABLE test_db.wgj_mobile_pay as
+with t1 as(
+SELECT a.driver_id,
+       a.amount,
+       b.product_id,
+       from_unixtime(a.created_at+3600,'yyyy-MM-dd') dt
+FROM oride_dw_ods.ods_sqoop_base_data_driver_recharge_records_df a
+LEFT OUTER JOIN
+  (SELECT DISTINCT driver_id,product_id
+   FROM oride_dw.dim_oride_driver_base
+   WHERE product_id in (1,2,3,4)
+     AND city_id!=999001
+     AND dt=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)) b ON a.driver_id=b.driver_id
+LEFT OUTER JOIN
+  (SELECT driver_id,
+          balance,
+          dt
+   FROM oride_dw_ods.ods_sqoop_base_data_driver_balance_extend_df
+   WHERE dt BETWEEN date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) AND date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)) c ON a.driver_id=c.driver_id
+AND from_unixtime(a.created_at+3600, "yyyy-MM-dd")=c.dt
+WHERE a.amount != 0
+  AND a.amount_reason = 6
+  AND c.balance>=0
+  AND b.driver_id IS NOT NULL
+  AND c.driver_id IS NOT NULL
+  AND from_unixtime(a.created_at+3600, "yyyy-MM-dd") BETWEEN date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) AND date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+  AND a.dt = date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+)
+select dt,product_id, abs(sum(amount)) amount
+from t1
+group by dt,product_id
+order by dt asc;
+
+--5、补录份子钱
+--收入-补录份子钱  补录还款的金额，条件：产品线产品线（1，2，3，4），限定资金调整原因为1；
+CREATE TABLE test_db.wgj_take_rate_implement as
+ SELECT from_unixtime(a.created_at+3600, "yyyy-MM-dd") dt,product_id,sum(a.amount) as manual_pay
+    FROM oride_dw_ods.ods_sqoop_base_data_driver_recharge_records_df a
+    left outer join (select distinct driver_id,product_id from oride_dw.dim_oride_driver_base where product_id in (1,2,3,4) and city_id!=999001 
+    and dt=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)) b
+    on a.driver_id=b.driver_id
+    WHERE from_unixtime(a.created_at+3600, "yyyy-MM-dd")  between date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) and date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+    and b.driver_id is not null
+    and a.amount_reason =1
+    and a.dt =date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+    group by from_unixtime(a.created_at+3600, "yyyy-MM-dd"),product_id;
+
+  --6、罚款收入
+  --收入-罚款收入 取消罚款盈余+投诉罚款
+CREATE TABLE test_db.wgj_penalty as
+with t as(
+select a.driver_id,a.product_id,a.dt,(nvl(t2.falsify_cancel,0)+nvl(t3.tousu,0)) as penalty_income
+from (select driver_id,product_id,city_id,dt from oride_dw.dim_oride_driver_base where product_id in (1,2,3,4) and city_id!=999001 and dt>=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) and dt<=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)) a
+left outer join 
+(SELECT driver_id,dt,
+abs(sum(nvl(falsify,0)))+abs(sum(nvl(falsify_driver_cancel,0)))+abs(sum(nvl(malice_brush_driver_deduct,0)))-abs(sum(nvl(falsify_get,0)))-abs(sum(nvl(falsify_get_driver_cancel,0)))-abs(sum(nvl(malice_brush_user_reward,0))) falsify_cancel --有责取消罚款盈余
+FROM oride_dw.dwd_oride_order_base_include_test_di
+   WHERE dt>=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) and dt<=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+   group by dt,driver_id)t2
+on a.driver_id=t2.driver_id and a.dt=t2.dt
+left outer join
+(SELECT driver_id,from_unixtime(created_at+3600,'yyyy-MM-dd') day,
+  abs(sum(nvl(amount,0))) tousu --投诉罚款
+FROM oride_dw.dwd_oride_driver_recharge_records_df
+   WHERE amount!=0
+    and from_unixtime(created_at+3600,'yyyy-MM-dd') >=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3)
+     and  from_unixtime(created_at+3600,'yyyy-MM-dd') <=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+     AND amount_reason=14 
+     and dt=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+    group by from_unixtime(created_at+3600,'yyyy-MM-dd'),driver_id)t3
+on a.driver_id=t3.driver_id and a.dt=t3.day
+where COALESCE(t2.falsify_cancel,t3.tousu) is not null
+and (nvl(t2.falsify_cancel,0)+nvl(t3.tousu,0))>0
+)
+select dt,product_id,sum(penalty_income) penalty_income from t
+group by dt,product_id
+order by dt,product_id;
+
+--7、财务小项：（2 扣除份子钱；8 押金还款；9 登记还款；10 首付贷款)
+--收入-财务小项 其他相关的调整金额项，条件：产品线产品线（1，2，3，4），限定资金调整原因为(2,8,9,10,15,16,17,18)；
+CREATE TABLE test_db.wgj_other_finance as
+ SELECT from_unixtime(a.created_at+3600, "yyyy-MM-dd") dt,
+      b.product_id,
+      sum(a.amount)*-1 as other_pay
+    FROM oride_dw_ods.ods_sqoop_base_data_driver_recharge_records_df a
+    left outer join (select distinct driver_id,product_id from oride_dw.dim_oride_driver_base where product_id in (1,2,3,4) and city_id!=999001 
+    and dt=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)) b
+    on a.driver_id=b.driver_id
+    WHERE from_unixtime(a.created_at+3600, "yyyy-MM-dd")  between date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) and date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+    and b.driver_id is not null
+    and a.amount_reason in(2,8,9,10,15,16,17,18)
+    and a.dt =date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+    group by from_unixtime(a.created_at+3600, "yyyy-MM-dd"),b.product_id;
+	
+	
+	
+	
+	
+	----手机/摩托车数量
+  --手机数量  骑手手机个数，条件：业务线Id=1，  资产分类=1，资产状态不等于99；
+  --摩托车数量 摩托车个数，条件：业务线Id=1，资产ID为14，资产状态不等于99；
+select
+a.dt,
+a.motuo `摩托车数量`,
+b.shouji`手机数量`
+from
+(SELECT 
+ dt,count(DISTINCT get_json_object(custom_attribute_value, "$.PLATE_NUMBER")) motuo
+FROM oride_dw_ods.ods_sqoop_base_oride_assets_sku_df
+WHERE dt between date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) and date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+AND business_id=1
+AND property_id=14
+and status !=99
+group by dt) a
+left join
+(SELECT a.dt,count(DISTINCT a.sn) shouji
+FROM
+  (SELECT sn,
+          dt,
+          property_id,
+          business_id,
+          status
+   FROM oride_dw_ods.ods_sqoop_base_oride_assets_sku_df
+   WHERE dt between date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) and 'date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)') a
+LEFT JOIN
+  (SELECT *
+   FROM oride_dw_ods.ods_sqoop_base_oride_properties_df
+   WHERE dt between date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) and 'date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)')b 
+   ON a.property_id=b.property_id
+   AND a.dt=b.dt
+WHERE b.cate_ids='1'
+  AND a.business_id='1'
+  AND a.status !='99'
+  and b.property_id is not null
+  group by a.dt) b on a.dt=b.dt
+
+
+  
+  
+  ---摩托车份子钱
+  --收入-摩托车份子钱收入 扣缴的摩托车账户的份子钱，限制条件为余额大于0，
+with t1 as
+(
+ select a.driver_id,
+ from_unixtime(a.day+3600, "yyyy-MM-dd") day,
+ a.amount_agenter,
+ c.balance 
+ from oride_dw_ods.ods_sqoop_base_data_driver_records_day_df a
+ left outer join 
+  (select distinct driver_id from oride_dw.dim_oride_driver_base where product_id=1 and city_id!=999001 and dt=date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)) b
+  on a.driver_id=b.driver_id
+ left outer join 
+  (select driver_id, balance,dt from oride_dw_ods.ods_sqoop_base_data_driver_balance_extend_df where dt between date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) and date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1) c
+  on a.driver_id=c.driver_id and from_unixtime(a.day+3600, "yyyy-MM-dd")=c.dt
+ where a.amount_agenter>0 
+ and c.balance>=0
+ and b.driver_id is not null
+ and c.driver_id is not null
+ and from_unixtime(a.day+3600, "yyyy-MM-dd") between date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3) and date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),3)
+ and a.dt =date_sub(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),1)
+)
+select day, sum(amount_agenter) amount_agenter
+from t1
+group by day
+order by day asc

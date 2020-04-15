@@ -1,0 +1,341 @@
+
+
+clone远程仓库下来，默认的就是origin,可以 git remote -v查看
+直接git push -u origin master    git pull 即可
+
+
+
+自己创建一个git项目， git remote -v查看什么也没有，因为本地默认就是master
+也就是 git remote -v查看的是远程的仓库名字
+
+
+有两个分支，git push  origin master       git pull origin master
+
+git push  one master       git pull one master
+
+
+
+add commit之后，git status没有变化
+
+修改，先git pull 不会覆盖修改的内容
+
+
+mysql只能用它：
+select DATE_FORMAT('2020-04-04 02:12:34','%Y-%m-%d') 
+select FROM_UNIXTIME(1585967148,'%Y-%m-%d')
+
+两者不能互用，否则达不到效果
+
+hive只能用它：
+select DATE_FORMAT('2020-04-04 02:12:34','yyyy-MM-dd') 
+select FROM_UNIXTIME(1585967148,'yyyy-MM-dd')
+
+
+1.订单表天级别增量，分析一般只是当天的吗？
+
+
+
+
+做拉链一般是获取全量，现在不做了，订单表不需要获取全量，只获取当天的，增量就行
+
+那拉链表数据了越来越大，怎么办
+
+
+确定主题
+
+dwd:多张ods    dwd/ods都有
+dwm:多张dwd
+
+dm 
+
+提过来的再弄dm
+
+
+提过来的一般是app
+其他层都是自己建模
+
+
+
+
+主题和建模有什么关系
+
+粒度伴随着唯一性   例如订单号。
+
+=======================
+初始化小时全量，第一个小时，没有太大意义吧
+
+dwd初始化小时全量，你是怎做的？
+
+full join
+
+现在的小时表，binlog为什么？
+dwd也是小时的，有必要吗？
+因为之后的表依赖dwd，还要去重
+
+app 天，没有小时需求吧
+
+
+订单表一般分析的月，天，周吧，很少是历史的吧
+
+拉链表，获取历史状态的信息，订单一般需要看吗？ 什么表要做拉链表       一段时间？ 手动删除
+
+事实表，dwm  指标汇总是跟随着需求方推动吧，只给口径？不给sql吧，你的业务opos,电商也是口径 
+不会自己跟着业务去自己汇总
+
+你的电商怎的好快呀
+
+维度表自己整理
+dwd自己        底层多表
+
+app是最终提供给需求方的吧，所有指标都计算好的。
+
+一个业务，数仓建模是怎么进行？怎么开展的
+确定主题
+。。。。
+
+
+
+1.binlog监听mysql日志，ddl，操作
+小时增量，初始化小时增量是必要的，保证了真正的历史数据
+
+
+2.binlog:准实时    不需要关注底层源表结构（json 一一对应 ）  多国家分区（小时更准确）
+
+3.dwd_hi  dwd_di都要做  dwd_hi是不是就多余？
+
+4.di full join his 23
+
+hi  
+
+
+
+
+4.上周最后说的那个问题，名字变化，
+
+粒度，由业务方需求决定？
+dim也是根据需求来做吧，不自己根据业务去整
+星座模型
+1.dwd,dim,dwm小时全量，为什么不做成天级全量，还有小时需求？
+2.而且，dwd,dim,dwm小时全量底层是由ods小时增量去做，为什么不用ods小时全量表？
+  ods小时增量去做的话，是不是需要先初始化全量一下，用初始化小时全量表
+3.什么一般要做拉链，比如订单表吗？但我感觉一天的订单量，状态变化的数据也是挺多的
+  当初计划做拉链，是为什么？后来又不做，是为什么？
+
+
+
+
+
+date保存精度到天，格式为：YYYY-MM-DD，如2016-11-07
+datetime和timestamp精度保存到秒，格式为：YYYY-MM-DD HH:MM:SS,如：2016-11-07 10:58:27
+因此如果只需保存到天的字段（如生日）用date就可以了。
+
+
+
+
+1.mysql的库确定了，表在哪里？
+2.小时 hour='{now_hour}'
+3.为什么要删除，直接追加就行吧
+4.sqoop 直接写sql，airflow搞定
+5.oride那边，我看不到推的
+6.app有小时需求？
+
+
+
+
+
+转义，在hive中\\，在py中\\\\
+
+埋点数据，增量采集，但是不需要去重，因为这是不用的操作
+
+
+并且在磁盘故障的时候可以利用mysql-binlog恢复数据。
+
+主要作用是用于数据库的主从复制及数据的增量恢复。
+
+
+
+
+ oexpress的订单状态变化了 也会增量采集到吧，oexpress订单状态变化持续的时间比较长
+ 可以，采集是小时级，每小时变化的终态
+
+ 现在所有的埋点都走的是一个流程 统一进到一个topic里，然后再根据bzp区分业务线，该是谁的归到谁那里去~
+
+新的埋点（打点）工具，就会有新的格式
+
+
+1、B2B(也有写成 BTB，是Business-to-Business的缩写)是指企业与企业之间通过专用网络或Internet，进行数据信息的交换、传递，开展交易活动的商业模式。它将企业内部网和企业的产品及服务，通过 B2B 网站或移动客户端与客户紧密结合起来，通过网络的快速反应，为客户提供更好的服务，从而促进企业的业务发展。
+2、B2C是Business-to-Customer的缩写，而其中文简称为7a686964616fe58685e5aeb931333431353962“商对客”。“商对客”是电子商务的一种模式，也就是通常说的直接面向消费者销售产品和服务商业零售模式。
+3、C2C实际是电子商务的专业用语，是个人与个人之间的电子商务。其中C指的是消费者，因为消费者的英文单词是Customer(Consumer)，所以简写为c，又因为英文中的2的发音同to，所以C to C简写为C2C。C2C即 Customer(Consume) to Customer(Consumer)。C2C的意思就是消费者个人间的电子商务行为。比如一个消费者有一台电脑，通过网络进行交易，把它出售给另外一个消费者，此种交易类型就称为C2C电子商务。
+B2B有三宝：企业、中介、沟通好
+B2C有三宝：品牌、渠道、销售好
+C2C有三宝：你开、我买、支付宝
+
+
+
+hue zeppelin 浏览器端的Web控制台上与Hadoop集群进行交互来分析处理数据
+
+sqoop采集：
+告诉他们新增字段只能从最后增加
+不能从中间增加
+要不咱们这边采集会有问题的
+
+
+Impala 与Hive都是构建在Hadoop之上的数据查询工具各有不同的侧重适应面，但从客户端使用来看Impala与Hive有很多的共同之处，如数据表元数 据、ODBC/JDBC驱动、SQL语法、灵活的文件格式、存储资源池等。Impala与Hive在Hadoop中的关系如图 2所示。Hive适合于长时间的批处理查询分析，而Impala适合于实时交互式SQL查询，Impala给数据分析人员提供了快速实验、验证想法的大数 据分析工具。可以先使用hive进行数据转换处理，之后使用Impala在Hive处理后的结果数据集上进行快速的数据分析
+
+
+1	CREATE EXTERNAL TABLE `dim_date`(
+2	  `dt` string COMMENT 'yyyy-MM-dd格式日期', 
+3	  `ds` string COMMENT 'yyyyMMdd格式日期', 
+4	  `week_id` tinyint COMMENT '所在周的周几，1-7表示', 
+5	  `week_en` string COMMENT '所在周的周几，英文', 
+6	  `month` tinyint COMMENT '所在月份', 
+7	  `quater` tinyint COMMENT '所在季度', 
+8	  `year` string COMMENT '所在年', 
+9	  `day_of_mon` smallint COMMENT '当前日期在本月第几天', 
+10	  `day_of_year` int COMMENT '当前日期在本年第几天', 
+11	  `first_day_of_mon` string COMMENT '当前日期的本月第一天', 
+12	  `last_day_of_mon` string COMMENT '当前日期的本月最后一天', 
+13	  `week_of_mon` smallint COMMENT '当前日期的所在周属于本月第几周', 
+14	  `week_of_year` int COMMENT '当前日期的所在周属于本年第几周', 
+15	  `monday_of_year` string COMMENT '当前日期的所在周的周一时间', 
+16	  `is_weekend` tinyint COMMENT '是否是周末')
+17	ROW FORMAT SERDE 
+18	  'org.apache.hadoop.hive.ql.io.orc.OrcSerde' 
+19	STORED AS INPUTFORMAT 
+20	  'org.apache.hadoop.hive.ql.io.orc.OrcInputFormat' 
+21	OUTPUTFORMAT 
+22	  'org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat'
+23	LOCATION
+24	  'oss://opay-datalake/oride/public_dw_dim/dim_date'
+25	TBLPROPERTIES (
+26	  'orc.compress'='SNAPPY', 
+27	  'transient_lastDdlTime'='1577441151')
+
+
+
+
+对，当时是进件数对不上，因为我是按分期，进件日期分区，一个人可以有多个进件，所以对不上，那个问题，我已经改代码了，现在可以对的上，数据没问题
+
+
+周是在周的粒度去重，月是在月的粒度，日在日的粒度去重
+
+
+sqoop采集我记得末尾加字段。对咱们采集是无感的
+是在中间加的,sqoop就会报错
+
+
+我准备把一个订单的各个流转时间做到一个中间层去
+做一个订单粒度的表
+app层以及邮件报表的升级你这边来负责
+
+
+李帅 我刚跟家英聊了下 这次的需求是风控的。说逻辑都是他们自己的
+所以这块还是你这边来做吧
+我不往数仓模型中做了
+
+
+丽姐，问你个问题，就是现在我看到好多表（dwd,dwm）都是小时级别的，为什么不做成天级别的，需求一般都是天级的吧
+咱们做小时级别就是为了解决时区问题,以后开多个国家的时候比较方便使用
+
+
+对了，丽姐，当初消费金融这边计划做拉链，是因为什么来，后来又不做，是因为有小时级别的表吗
+不是 维护成本高
+
+
+丽姐，比如订单的优惠率，在app层，直接计算出订单的优惠率还是只提供订单原价金额与订单优惠金额
+率不在数仓统计
+意思是即使应用层app也不算率，如果需求那边要算率，那就是他们的事情了吧，我们只提供app表，需求方拿到app表自己再进行算率
+ok
+
+
+
+泽哥，建表关联topic数据，我看到数据源目录是下面：.json.gz格式
+s3a://opay-bi/opay_buried/ussd-request/dt=2019-12-10/hour=08/ussd-request_9_0000008991.json.gz
+创建表要求是用orc，然后建表location指定上面的存储位置是读不出数据的，如果不指定数据存储格式，不压缩是可以读出来的
+建表必须要orc压缩格式吗？如果用orc,那我还需要建临时中间表，导一下数据。
+
+CREATE EXTERNAL TABLE `algo.can_carpool_order`(    
+   `inner_id` bigint COMMENT 'from deserializer',   
+   `order_list` array<int> COMMENT 'from deserializer',
+   city_id bigint comment 'from deserializer') 
+ PARTITIONED BY (                                   
+   `dt` string,                                     
+   `hour` string)                                   
+ ROW FORMAT SERDE                                   
+   'org.openx.data.jsonserde.JsonSerDe'             
+ WITH SERDEPROPERTIES (                             
+   'ignore.malformed.json'='true')                  
+ STORED AS INPUTFORMAT                              
+   'org.apache.hadoop.mapred.TextInputFormat'       
+ OUTPUTFORMAT                                       
+   'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat' 
+ LOCATION                                           
+   's3a://opay-bi/oride_buried/can_carpool_order' ;
+
+埋点的日志都是json 的
+埋点不创建orc
+
+
+
+select count(1),sum(if(status in(4,5),1,0))
+ from (SELECT *,
+             (t.create_time - 8 * 60 * 60 * 1) as local_create_time,
+
+             row_number() over(partition by t.id order by t.`__ts_ms` desc) as order_by
+
+        FROM oride_dw_ods.ods_binlog_base_data_order_hi t
+
+        WHERE concat_ws(' ',dt,hour) BETWEEN '2019-12-27 23' AND '2019-12-28 23' --取昨天1天数据与今天早上00数据
+
+        AND from_unixtime((t.create_time - 8 * 60 * 60 * 1),'yyyy-MM-dd') = '2019-12-28'
+        
+         ) t1
+where t1.`__deleted` = 'false' and t1.order_by = 1
+and city_id<>999001 and driver_id<>0;
+这个是oride 订单的校验方式，你先参考一下。我验证没有问题，在告诉你
+
+
+我们是数据的使用方，切记。
+
+
+数据开发排期分为：
+排期1：数据探查(数据需求梳理) 
+排期2：数据开发
+
+
+泽哥，那个分库分表，之前opay采集过，就是让张玉亮在同一个连接地址下，创建一个库，在库里再创建一个表，该表的表结构和分库分表的表结构一样就行，然后，把脚本配置一下就行。
+你说的是个办法，但是dba不负责，是业务的事情
+
+
+where get_json_object(e, '$.ev') like '%product_id%'
+{"product_id":403188,"product_status":1}
+
+
+
+oride_dw_ods:173
+oride_dw:203      dwm:18    dm:16    dim:8    app:62
+
+
+
+目前有三个漏斗 乘客、订单、司机
+funnel的
+订单漏斗看ord那个 那是新的
+
+
+丽姐，像这个漏斗，需求方提供口径和底层计算口径的表（一般是dwd层的吧），自己再建模，做到app出
+
+漏斗不需要建模呀
+只是个需求
+数仓建模和需求是两码事
+
+但是建模通常是依据需求进行吧
+
+你可以找个数仓的书看看
+
+嗯嗯，好
+
+
+
+
+
+

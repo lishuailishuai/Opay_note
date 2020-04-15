@@ -1,0 +1,317 @@
+
+
+
+format_number(sum(loan_amount_usd),0) as loan_amount_usd,
+
+1.
+          select
+          loan_time,--放款日期
+          round(loan_amount_usd_expire,2),--贷款金额USD
+          loan_cnt_expire,--放款件数
+          existing_overdue_cnt,--CPD0+件数
+          nvl(concat(round(existing_overdue_cnt/existing_expire0_cnt*100,2),'%'),''),--CPD0+%
+          nvl(concat(round(existing_overdue3_cnt/existing_expire3_cnt*100,2),'%'),''),--CPD3+%
+          nvl(concat(round(existing_overdue5_cnt/existing_expire5_cnt*100,2),'%'),''),--CPD5+%
+          nvl(concat(round(existing_overdue7_cnt/existing_expire7_cnt*100,2),'%'),''),--CPD7+%
+          nvl(concat(round(existing_overdue15_cnt/existing_expire15_cnt*100,2),'%'),''),--CPD15+%
+          nvl(concat(round(existing_overdue30_cnt/existing_expire30_cnt*100,2),'%'),''),--CPD30+%
+          downpay_overdue_cnt,--FPD0+件数
+          nvl(concat(round(downpay_overdue_cnt/downpay_expire0_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue3_cnt/downpay_expire3_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue5_cnt/downpay_expire5_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue7_cnt/downpay_expire7_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue15_cnt/downpay_expire15_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue30_cnt/downpay_expire30_cnt*100,2),'%'),'')--FPD0+%
+          from
+          ocredit_phones_dw.app_ocredit_phones_overdue_cube_d
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and loan_time is not null
+          and 
+          substr(loan_time,1,7) = substr(ADD_MONTHS(date_sub(current_date(),1),-1),1,7)
+          order by loan_time desc
+
+
+
+2.
+
+          select
+          loan_month,--放款月
+          round(loan_amount_usd_expire,2),--贷款金额USD
+          loan_cnt_expire,--放款件数
+          existing_overdue_cnt,--CPD0+件数
+          nvl(concat(round(existing_overdue_cnt/existing_expire0_cnt*100,2),'%'),''),--CPD0+%
+          nvl(concat(round(existing_overdue3_cnt/existing_expire3_cnt*100,2),'%'),''),--CPD3+%
+          nvl(concat(round(existing_overdue5_cnt/existing_expire5_cnt*100,2),'%'),''),--CPD5+%
+          nvl(concat(round(existing_overdue7_cnt/existing_expire7_cnt*100,2),'%'),''),--CPD7+%
+          nvl(concat(round(existing_overdue15_cnt/existing_expire15_cnt*100,2),'%'),''),--CPD15+%
+          nvl(concat(round(existing_overdue30_cnt/existing_expire30_cnt*100,2),'%'),''),--CPD30+%
+          downpay_overdue_cnt,--FPD0+件数
+          nvl(concat(round(downpay_overdue_cnt/downpay_expire0_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue3_cnt/downpay_expire3_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue5_cnt/downpay_expire5_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue7_cnt/downpay_expire7_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue15_cnt/downpay_expire15_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue30_cnt/downpay_expire30_cnt*100,2),'%'),'')--FPD0+%
+          from
+          ocredit_phones_dw.app_ocredit_phones_overdue_cube_d
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and loan_month is not null
+          order by loan_month desc
+
+
+3.
+
+
+          select
+          concat_ws('-',regexp_replace(substr(loan_week,6,5),'-',''),regexp_replace(substr(loan_week,17,5),'-','')) aa,--放款周
+          round(loan_amount_usd_expire,2),--贷款金额USD
+          loan_cnt_expire,--放款件数
+          existing_overdue_cnt,--CPD0+件数
+          nvl(concat(round(existing_overdue_cnt/existing_expire0_cnt*100,2),'%'),''),--CPD0+%
+          nvl(concat(round(existing_overdue3_cnt/existing_expire3_cnt*100,2),'%'),''),--CPD3+%
+          nvl(concat(round(existing_overdue5_cnt/existing_expire5_cnt*100,2),'%'),''),--CPD5+%
+          nvl(concat(round(existing_overdue7_cnt/existing_expire7_cnt*100,2),'%'),''),--CPD7+%
+          nvl(concat(round(existing_overdue15_cnt/existing_expire15_cnt*100,2),'%'),''),--CPD15+%
+          nvl(concat(round(existing_overdue30_cnt/existing_expire30_cnt*100,2),'%'),''),--CPD30+%
+          downpay_overdue_cnt,--FPD0+件数
+          nvl(concat(round(downpay_overdue_cnt/downpay_expire0_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue3_cnt/downpay_expire3_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue5_cnt/downpay_expire5_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue7_cnt/downpay_expire7_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue15_cnt/downpay_expire15_cnt*100,2),'%'),''),--FPD0+%
+          nvl(concat(round(downpay_overdue30_cnt/downpay_expire30_cnt*100,2),'%'),'')--FPD0+%
+          from
+          ocredit_phones_dw.app_ocredit_phones_overdue_cube_d
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and loan_week is not null
+          order by aa desc
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE EXTERNAL TABLE ocredit_phones_dw.app_ocredit_phones_overdue_cube_d(  
+loan_time string comment '放款日',
+loan_month string comment '放款月份',
+loan_week string comment '放宽周',
+loan_amount_usd_expire double comment '贷款金额USD_到期',
+loan_cnt_expire bigint comment '放款件数_到期',
+
+existing_overdue_cnt bigint comment 'CPD0+件数，也就是现存逾期件数,（合同数)',
+existing_overdue3_cnt bigint comment '现存逾期超过3天的件数（合同数)',
+existing_overdue5_cnt bigint comment '现存逾期超过5天的件数（合同数)',
+existing_overdue7_cnt bigint comment '现存逾期超过7天的件数（合同数)',
+existing_overdue15_cnt bigint comment '现存逾期超过15天的件数（合同数)',
+existing_overdue30_cnt bigint comment '现存逾期超过30天的件数（合同数)',
+
+existing_expire0_cnt bigint comment '现存逾期,放款到期超过0天的合同数',
+existing_expire3_cnt bigint comment '现存逾期,放款到期超过3天的合同数',
+existing_expire5_cnt bigint comment '现存逾期,放款到期超过5天的合同数',
+existing_expire7_cnt bigint comment '现存逾期,放款到期超过7天的合同数',
+existing_expire15_cnt bigint comment '现存逾期,放款到期超过15天的合同数',
+existing_expire30_cnt bigint comment '现存逾期,放款到期超过30天的合同数',
+
+downpay_overdue_cnt bigint comment 'FPD0+件数，也就是首期逾期件数,（合同数)',
+downpay_overdue3_cnt bigint comment '首期逾期超过3天的件数 （合同数)',
+downpay_overdue5_cnt bigint comment '首期逾期超过5天的件数 （合同数)',
+downpay_overdue7_cnt bigint comment '首期逾期超过7天的件数 （合同数)',
+downpay_overdue15_cnt bigint comment '首期逾期超过15天的件数 （合同数)',
+downpay_overdue30_cnt bigint comment '首期逾期超过30天的件数 （合同数)',
+
+downpay_expire0_cnt bigint comment '首期逾期,放款到期超过0天的合同数',
+downpay_expire3_cnt bigint comment '首期逾期,放款到期超过3天的合同数',
+downpay_expire5_cnt bigint comment '首期逾期,放款到期超过5天的合同数',
+downpay_expire7_cnt bigint comment '首期逾期,放款到期超过7天的合同数',
+downpay_expire15_cnt bigint comment '首期逾期,放款到期超过15天的合同数',
+downpay_expire30_cnt bigint comment '首期逾期,放款到期超过30天的合同数'
+
+)
+COMMENT '逾期汇总表'  
+PARTITIONED BY (   
+country_code string COMMENT '二位国家码',
+dt string COMMENT '分区时间'
+)
+STORED AS orc  
+LOCATION  
+ 'oss://opay-datalake/ocredit_phones/ocredit_phones_dw/app_ocredit_phones_overdue_cube_d'
+TBLPROPERTIES (  
+'orc.compress'='SNAPPY'
+);
+
+
+
+
+          select
+          t3.loan_tm  as loan_tm, --放款日
+          t3.loan_month as loan_month, --放款月份
+          t3.loan_week as loan_week, --放款周
+          sum(case when t2.order_id is not null then main.loan_amount*0.2712/100 else null end) as loan_amount_usd_expire, --'贷款金额USD_到期',
+          count(DISTINCT case when t2.order_id is not null then t2.order_id else null end) as loan_cnt_expire, --'放款件数_到期',
+          
+          
+          count(DISTINCT case when t2.overdue_days >0 then t2.order_id else null end) as existing_overdue_cnt,--`CPD0+件数，也就是现存逾期件数`,（合同数）
+             
+          count(DISTINCT case when t2.overdue_days >3 then t2.order_id else null end) as existing_overdue3_cnt,--现存逾期超过3天的件数（合同数）
+          count(DISTINCT case when t2.overdue_days >5 then t2.order_id else null end) as existing_overdue5_cnt,--现存逾期超过5天的件数 （合同数）       
+          count(DISTINCT case when t2.overdue_days >7 then t2.order_id else null end) as existing_overdue7_cnt,--现存逾期超过7天的件数 （合同数）     
+          count(DISTINCT case when t2.overdue_days >15 then t2.order_id else null end) as existing_overdue15_cnt,--现存逾期超过15天的件数 （合同数）    
+          count(DISTINCT case when t2.overdue_days >30 then t2.order_id else null end) as existing_overdue30_cnt,--现存逾期超过30天的件数 （合同数）    
+          
+          count(DISTINCT case when t2.fzrq > 0 then t2.order_id end) as existing_expire0_cnt,--现存逾期,放款到期超过0天的合同数
+          count(DISTINCT case when t2.fzrq > 3 then t2.order_id end) as existing_expire3_cnt,--现存逾期,放款到期超过3天的合同数    
+          count(DISTINCT case when t2.fzrq > 5 then t2.order_id end) as existing_expire5_cnt,--现存逾期,放款到期超过5天的合同数    
+          count(DISTINCT case when t2.fzrq > 7 then t2.order_id end) as existing_expire7_cnt,--现存逾期,放款到期超过7天的合同数    
+          count(DISTINCT case when t2.fzrq > 15 then t2.order_id end) as existing_expire15_cnt,--现存逾期,放款到期超过15天的合同数    
+          count(DISTINCT case when t3.fzrq > 30 then t2.order_id end) as existing_expire30_cnt,--现存逾期,放款到期超过30天的合同数   
+          
+          
+          
+          count(DISTINCT case when t3.overdue_days >0 then t3.order_id else null end) as downpay_overdue_cnt,--`FPD0+件数，也就是首期逾期件数`,（合同数）
+                 
+          count(DISTINCT case when t3.overdue_days >3 then t3.order_id else null end) as downpay_overdue3_cnt,--首期逾期超过3天的件数 （合同数）    
+          count(DISTINCT case when t3.overdue_days >5 then t3.order_id else null end) as downpay_overdue5_cnt,--首期逾期超过5天的件数 （合同数）         
+          count(DISTINCT case when t3.overdue_days >7 then t3.order_id else null end) as downpay_overdue7_cnt,--首期逾期超过7天的件数 （合同数）         
+          count(DISTINCT case when t3.overdue_days >15 then t3.order_id else null end) as downpay_overdue15_cnt,--首期逾期超过15天的件数 （合同数）        
+          count(DISTINCT case when t3.overdue_days >30 then t3.order_id else null end) as downpay_overdue30_cnt,--首期逾期超过30天的件数 （合同数）        
+          
+          count(DISTINCT case when t3.fzrq > 0 then t3.order_id end) as downpay_expire0_cnt,--首期逾期,放款到期超过0天的合同数       
+          count(DISTINCT case when t3.fzrq > 3 then t3.order_id end) as downpay_expire3_cnt,--首期逾期,放款到期超过3天的合同数           
+          count(DISTINCT case when t3.fzrq > 5 then t3.order_id end) as downpay_expire5_cnt,--首期逾期,放款到期超过5天的合同数           
+          count(DISTINCT case when t3.fzrq > 7 then t3.order_id end) as downpay_expire7_cnt,--首期逾期,放款到期超过7天的合同数           
+          count(DISTINCT case when t3.fzrq > 15 then t3.order_id end) as downpay_expire15_cnt,--首期逾期,放款到期超过15天的合同数          
+          count(DISTINCT case when t3.fzrq > 30 then t3.order_id end) as downpay_expire30_cnt,--首期逾期,放款到期超过30天的合同数          
+          
+          
+          from
+          (
+          select
+          order_id,--订单号
+          opay_id,--用户opayId
+          user_id,--销售端用户ID
+          order_status,--订单状态
+          pay_status,--支付状态
+          payment_status,--还款状态
+          product_name,--产品名称
+          merchant_id,--商户ID
+          merchant_name,--商户名称
+          (case when product_type='1' then '自营' when product_type='2' then '合作商' else null end) as product_type,--经营形式
+          to_date(loan_time) as loan_time,--放款时间
+          substr(to_date(loan_time),1,7) as loan_month,--放款月份
+          terms as total_period_no,--期数
+          down_payment/100 as down_payment,--首付金额
+          loan_amount/100 as loan_amount,--借款金额
+          date_sub(current_date(),1) as jzrq,--昨天
+          add_months(date_sub(current_date(),1),-1) as dqrq--昨天日期的前一个月的日期
+          from ocredit_phones_dw.dwd_ocredit_phones_order_base_df
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and date_add(from_unixtime(unix_timestamp(create_time)+3600,'yyyy-MM-dd'),0)>='2019-12-28'
+          and order_status='81' and loan_time is not null
+          )main
+          
+          left join
+          (select
+          t1.order_id,
+          max(t1.overdue_days) as overdue_days,--用户分期，最大的未还钱的逾期天数
+          min(case when t1.current_repayment_status = '2' then t1.due_tm else null end) as overdue_tm,--逾期最小的预计还款时间
+          count(t1.due_tm) as due_period_no,--总分期数
+          count(case when t1.current_repayment_status = '3' then t1.period_no else null end) as fact_period_no,--完成支付的分期个数
+          count(case when t1.current_repayment_status = '2' then t1.period_no else null end) as over_period_no,--未完成支付的分期个数
+          max(fzrq) as fzrq--最大的差值   --当前时间-预计还款时间
+          from
+          (select
+          date_sub(current_date(),1) as jzrq,--昨天
+          datediff(current_date(),to_date(date(repayment_time))) as fzrq,--当前时间-预计还款时间
+          order_id,--订单id
+          user_id,--用户id
+          contract_id,--合同编号
+          current_period as period_no,--当前还款期数
+          to_date(repayment_time) as due_tm,--预计还款时间
+          month_total_amount/100  as due_total_amount,--月还总额
+          month_amount/100 as due_capital_amount,--月还本金
+          to_date(real_repayment_time) as fact_tm,--实际还款时间
+          real_total_amount/100 as fact_total_amount,--实还总额
+          real_amount/100 as fact_capital_amount,--实还本金
+          current_repayment_status,--当前还款状态:(0:未还清，1:已还清)
+          (case when current_repayment_status='3' then 'PERMANENT' else 'OVERDUE' end) as plan_status,
+          (case when current_repayment_status='3' then 0 else datediff(current_date(),to_date(repayment_time)) end) as overdue_days--未还钱的逾期天数
+          from  ocredit_phones_dw.dwd_ocredit_phones_repayment_detail_df
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and to_date(repayment_time) <= date_sub(current_date(),1)
+          )t1
+          group by t1.order_id
+          )t2 on main.order_id=t2.order_id
+          
+          
+          left join
+          (select
+          date_sub(current_date(),1) as jzrq,----昨天
+          substr(ADD_MONTHS(to_date(repayment_time),-1),1,7) as loan_month,--放款月
+          ADD_MONTHS(to_date(repayment_time),-1) as loan_tm,----放款时间
+          concat(date_add(next_day(ADD_MONTHS(to_date(repayment_time),-1),'MO'),-7),'_',date_add(next_day(ADD_MONTHS(to_date(repayment_time),-1),'MO'),-1)) as loan_week,--放款周
+          datediff(current_date(),to_date(date(repayment_time))) as fzrq,--当前时间-预计还款时间
+          order_id,
+          user_id,
+          contract_id,
+          current_period as period_no,
+          to_date(repayment_time) as due_tm,--预计还款时间
+          month_total_amount/100  as due_total_amount,--月还总额
+          month_amount/100 as due_capital_amount,--月还本金
+          poundage/100 as  due_poundage_amount,--手续费
+          current_interest_rate/100 as current_interest_rate,--利息
+          real_repayment_time as fact_tm,--实际还款时间
+          real_total_amount/100 as fact_total_amount,--实还总额
+          real_amount/100 as fact_capital_amount,--实还本金
+          real_service_fee/100 as  fact_service_amount,--实还服务费
+          real_interest/100 as fact_interest_amount,--实还利息
+          real_poundage/100 as fact_poundage_amount,--实还手续费
+          real_penalty_interest/100 as fact_penalty_amount,--实还罚息
+          current_repayment_status,--当前还款状态:(0:未还清，1:已还清)
+          (case when current_repayment_status in ('3') and datediff(to_date(real_repayment_time),to_date(repayment_time))>0 then 'OVERDUE_CLEARED'--已还但逾期
+                when current_repayment_status in ('3') and datediff(to_date(real_repayment_time),to_date(repayment_time))<=0 then 'CLEARED'--已还没有逾期
+                else 'OVERDUE' end) as plan_status,--逾期，没还钱
+          	 
+          (case 
+          when current_repayment_status in ('3') and datediff(to_date(real_repayment_time),to_date(repayment_time))>0 then datediff(to_date(real_repayment_time),to_date(repayment_time))--已还的逾期天数
+          when current_repayment_status in ('3') and datediff(to_date(real_repayment_time),to_date(repayment_time))<=0 then 0
+          else datediff(current_date(),to_date(repayment_time)) end) as overdue_days      --未还的逾期天数
+          
+          from  ocredit_phones_dw.dwd_ocredit_phones_repayment_detail_df
+          where dt=date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and to_date(repayment_time) <= date_add(from_unixtime(unix_timestamp(),'yyyy-MM-dd'),-1)
+          and current_period='1'--当钱还款期数为1
+          )t3 on main.order_id=t3.order_id
+          where t2.order_id is not null
+          group by 
+          t3.loan_tm,
+          t3.loan_month,
+          t3.loan_week
+          grouping sets(t3.loan_tm,t3.loan_month,t3.loan_week)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

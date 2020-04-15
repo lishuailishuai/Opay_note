@@ -1,0 +1,53 @@
+
+任务的批量回溯
+
+airflow clear -s 2019-09-01 -e 2019-09-08 app_oride_finance_driver_repayment_test_d
+
+airflow backfill -x --rerun_failed_tasks -s 2019-09-01 -e 2019-09-08 app_oride_finance_driver_repayment_test_d
+
+
+SELECT UPPER('asd11asdasd') --转大写
+SELECT lower('ASDASDASD') --转小写
+
+
+dim一般都是从ods出
+
+
+采集表增量还是全量看数据量
+做表成增量还是全量看需求
+
+dwm增量表底层
+select * from oride_dw.dwd_oride_order_mark_df 
+        where dt='{pt}' and substr(create_time,1,10)='{pt}'
+
+select driver_id,
+               sum(amount) as reward_amount  --司机奖励金
+        from oride_dw.dwd_oride_driver_reward_di  --目前是全量表，后续会变成增量表
+        where dt='{pt}'
+        and from_unixtime(create_time,'yyyy-MM-dd')='{pt}'  --后续该限制条件要去除
+        group by driver_id
+
+
+订单号就是唯一的
+
+
+
+1.丽姐做的dwm,什么时候做的，怎么做的？当时做到dwm最终的目的是什么？也是需求方提供代码，让做到dwm进行展示？
+2.app出结果，dwm能汇总的就汇总，为什么刚有些开始没有汇总，在app进行汇总的？是因为丽姐当时的需求不需要汇总一些吗？
+3.你做这个指标的时候，就知道丽姐的这些表吗？
+4.增量和全量就是看需求而定吧
+5.group by 的条件不一样，缺了状态5，
+6.文档的名字对应
+7.汇总层和app 层一般都是要什么给什么，有时候提供的底层统计了，但没有展示出来，我们需不需要给展示出来。
+8.对方提出的需求在dwm,app层出
+9.
+
+dwm做轻度汇总，有明细
+
+
+
+
+
+
+
+

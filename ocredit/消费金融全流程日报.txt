@@ -1,0 +1,408 @@
+
+
+
+1.
+
+          select
+          date_of_entry,
+          sum(entry_cnt) as entry_cnt,
+          sum(pre_amount) as pre_amount,
+          sum(review_amount) as review_amount,
+          sum(loan_cnt) as loan_cnt,
+          concat(sum(pre_rate),'%') as pre_rate,
+          concat(sum(review_rate),'%') as review_rate,
+          concat(sum(all_rate),'%') as all_rate,
+          
+          sum(entry_cnt_3) as entry_cnt_3,
+          sum(pre_amount_3) as pre_amount_3,
+          sum(review_amount_3) as review_amount_3,
+          sum(loan_cnt_3) as loan_cnt_3,
+          concat(sum(pre_rate_3),'%') as pre_rate_3,
+          concat(sum(review_rate_3),'%') as review_rate_3,
+          concat(sum(all_rate_3),'%') as all_rate_3,
+          
+          sum(entry_cnt_6) as entry_cnt_6,
+          sum(pre_amount_6) as pre_amount_6,
+          sum(review_amount_6) as review_amount_6,
+          sum(loan_cnt_6) as loan_cnt_6,
+          concat(sum(pre_rate_6),'%') as pre_rate_6,
+          concat(sum(review_rate_6),'%') as review_rate_6,
+          concat(sum(all_rate_6),'%') as all_rate_6
+          
+          from(
+          select
+          date_of_entry,
+          entry_cnt,
+          pre_amount,
+          review_amount,
+          loan_cnt,
+          round(pre_amount/entry_cnt*100,2) pre_rate,
+          round(review_amount/pre_amount*100,2) review_rate,
+          round(review_amount/entry_cnt*100,2) all_rate,
+          null as entry_cnt_3,
+          null as pre_amount_3,
+          null as review_amount_3,
+          null as loan_cnt_3,
+          null as pre_rate_3,
+          null as review_rate_3,
+          null as all_rate_3,
+          null as entry_cnt_6,
+          null as pre_amount_6,
+          null as review_amount_6,
+          null as loan_cnt_6,
+          null as pre_rate_6,
+          null as review_rate_6,
+          null as all_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_d
+          where dt='{dt}'
+          and terms=-10000
+          and substr(date_of_entry,1,7) = substr('{dt}',1,7)
+          
+          union all
+          
+          select
+          date_of_entry,
+          null as entry_cnt,
+          null as pre_amount,
+          null as review_amount,
+          null as loan_cnt,
+          null as pre_rate,
+          null as review_rate,
+          null as all_rate,
+          entry_cnt as entry_cnt_3,
+          pre_amount as pre_amount_3,
+          review_amount as review_amount_3,
+          loan_cnt as loan_cnt_3,
+          round(pre_amount/entry_cnt*100,2) pre_rate_3,
+          round(review_amount/pre_amount*100,2) review_rate_3,
+          round(review_amount/entry_cnt*100,2) all_rate_3,
+          null as entry_cnt_6,
+          null as pre_amount_6,
+          null as review_amount_6,
+          null as loan_cnt_6,
+          null as pre_rate_6,
+          null as review_rate_6,
+          null as all_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_d
+          where dt='{dt}'
+          and terms=3
+          and substr(date_of_entry,1,7) = substr('{dt}',1,7)
+          
+          
+          union all
+
+
+          select
+          date_of_entry,
+          null as entry_cnt,
+          null as pre_amount,
+          null as review_amount,
+          null as loan_cnt,
+          null as pre_rate,
+          null as review_rate,
+          null as all_rate,
+          null as entry_cnt_3,
+          null as pre_amount_3,
+          null as review_amount_3,
+          null as loan_cnt_3,
+          null as pre_rate_3,
+          null as review_rate_3,
+          null as all_rate_3,
+          entry_cnt as entry_cnt_6,
+          pre_amount as pre_amount_6,
+          review_amount as review_amount_6,
+          loan_cnt as loan_cnt_6,
+          round(pre_amount/entry_cnt*100,2) pre_rate_6,
+          round(review_amount/pre_amount*100,2) review_rate_6,
+          round(review_amount/entry_cnt*100,2) all_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_d
+          where dt='{dt}'
+          and terms=6
+          and substr(date_of_entry,1,7) = substr('{dt}',1,7)
+          
+          ) a
+          group by date_of_entry
+          order by date_of_entry desc
+
+
+2.
+
+
+          select
+          month_of_entry,
+          sum(entry_cnt) as entry_cnt,
+          sum(pre_amount) as pre_amount,
+          sum(review_amount) as review_amount,
+          sum(loan_cnt) as loan_cnt,
+          concat(sum(pre_rate),'%') as pre_rate,
+          concat(sum(review_rate),'%') as review_rate,
+          concat(sum(all_rate),'%') as all_rate,
+          
+          sum(entry_cnt_3) as entry_cnt_3,
+          sum(pre_amount_3) as pre_amount_3,
+          sum(review_amount_3) as review_amount_3,
+          sum(loan_cnt_3) as loan_cnt_3,
+          concat(sum(pre_rate_3),'%') as pre_rate_3,
+          concat(sum(review_rate_3),'%') as review_rate_3,
+          concat(sum(all_rate_3),'%') as all_rate_3,
+          
+          sum(entry_cnt_6) as entry_cnt_6,
+          sum(pre_amount_6) as pre_amount_6,
+          sum(review_amount_6) as review_amount_6,
+          sum(loan_cnt_6) as loan_cnt_6,
+          concat(sum(pre_rate_6),'%') as pre_rate_6,
+          concat(sum(review_rate_6),'%') as review_rate_6,
+          concat(sum(all_rate_6),'%') as all_rate_6
+          
+          from(
+          select
+          month_of_entry,
+          entry_cnt,
+          pre_amount,
+          review_amount,
+          loan_cnt,
+          round(pre_amount/entry_cnt*100,2) pre_rate,
+          round(review_amount/pre_amount*100,2) review_rate,
+          round(review_amount/entry_cnt*100,2) all_rate,
+          null as entry_cnt_3,
+          null as pre_amount_3,
+          null as review_amount_3,
+          null as loan_cnt_3,
+          null as pre_rate_3,
+          null as review_rate_3,
+          null as all_rate_3,
+          null as entry_cnt_6,
+          null as pre_amount_6,
+          null as review_amount_6,
+          null as loan_cnt_6,
+          null as pre_rate_6,
+          null as review_rate_6,
+          null as all_rate_6
+
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_m
+          where dt='{dt}'
+          and terms=-10000
+          
+          
+          union all
+          
+          select
+          month_of_entry,
+          null as entry_cnt,
+          null as pre_amount,
+          null as review_amount,
+          null as loan_cnt,
+          null as pre_rate,
+          null as review_rate,
+          null as all_rate,
+          entry_cnt as entry_cnt_3,
+          pre_amount as pre_amount_3,
+          review_amount as review_amount_3,
+          loan_cnt as loan_cnt_3,
+          round(pre_amount/entry_cnt*100,2) pre_rate_3,
+          round(review_amount/pre_amount*100,2) review_rate_3,
+          round(review_amount/entry_cnt*100,2) all_rate_3,
+          null as entry_cnt_6,
+          null as pre_amount_6,
+          null as review_amount_6,
+          null as loan_cnt_6,
+          null as pre_rate_6,
+          null as review_rate_6,
+          null as all_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_m
+          where dt='{dt}'
+          and terms=3
+          
+          
+          
+          union all
+
+
+          select
+          month_of_entry,
+          null as entry_cnt,
+          null as pre_amount,
+          null as review_amount,
+          null as loan_cnt,
+          null as pre_rate,
+          null as review_rate,
+          null as all_rate,
+          null as entry_cnt_3,
+          null as pre_amount_3,
+          null as review_amount_3,
+          null as loan_cnt_3,
+          null as pre_rate_3,
+          null as review_rate_3,
+          null as all_rate_3,
+          entry_cnt as entry_cnt_6,
+          pre_amount as pre_amount_6,
+          review_amount as review_amount_6,
+          loan_cnt as loan_cnt_6,
+          round(pre_amount/entry_cnt*100,2) pre_rate_6,
+          round(review_amount/pre_amount*100,2) review_rate_6,
+          round(review_amount/entry_cnt*100,2) all_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_m
+          where dt='{dt}'
+          and terms=6
+          
+          ) a
+          group by month_of_entry
+          order by month_of_entry 
+
+
+
+
+3.
+
+
+          select
+          dateweek_of_entry,
+          sum(entry_cnt) as entry_cnt,
+          sum(pre_amount) as pre_amount,
+          sum(review_amount) as review_amount,
+          sum(loan_cnt) as loan_cnt,
+          concat(sum(pre_rate),'%') as pre_rate,
+          concat(sum(review_rate),'%') as review_rate,
+          concat(sum(all_rate),'%') as all_rate,
+          
+          sum(entry_cnt_3) as entry_cnt_3,
+          sum(pre_amount_3) as pre_amount_3,
+          sum(review_amount_3) as review_amount_3,
+          sum(loan_cnt_3) as loan_cnt_3,
+          concat(sum(pre_rate_3),'%') as pre_rate_3,
+          concat(sum(review_rate_3),'%') as review_rate_3,
+          concat(sum(all_rate_3),'%') as all_rate_3,
+          
+          sum(entry_cnt_6) as entry_cnt_6,
+          sum(pre_amount_6) as pre_amount_6,
+          sum(review_amount_6) as review_amount_6,
+          sum(loan_cnt_6) as loan_cnt_6,
+          concat(sum(pre_rate_6),'%') as pre_rate_6,
+          concat(sum(review_rate_6),'%') as review_rate_6,
+          concat(sum(all_rate_6),'%') as all_rate_6
+          
+          from(
+          select
+          dateweek_of_entry,
+          entry_cnt,
+          pre_amount,
+          review_amount,
+          loan_cnt,
+          round(pre_amount/entry_cnt*100,2) pre_rate,
+          round(review_amount/pre_amount*100,2) review_rate,
+          round(review_amount/entry_cnt*100,2) all_rate,
+          null as entry_cnt_3,
+          null as pre_amount_3,
+          null as review_amount_3,
+          null as loan_cnt_3,
+          null as pre_rate_3,
+          null as review_rate_3,
+          null as all_rate_3,
+          null as entry_cnt_6,
+          null as pre_amount_6,
+          null as review_amount_6,
+          null as loan_cnt_6,
+          null as pre_rate_6,
+          null as review_rate_6,
+          null as all_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_w
+          where dt='{dt}'
+          and terms=-10000
+          
+          
+          union all
+          
+          select
+          dateweek_of_entry,
+          null as entry_cnt,
+          null as pre_amount,
+          null as review_amount,
+          null as loan_cnt,
+          null as pre_rate,
+          null as review_rate,
+          null as all_rate,
+          entry_cnt as entry_cnt_3,
+          pre_amount as pre_amount_3,
+          review_amount as review_amount_3,
+          loan_cnt as loan_cnt_3,
+          round(pre_amount/entry_cnt*100,2) pre_rate_3,
+          round(review_amount/pre_amount*100,2) review_rate_3,
+          round(review_amount/entry_cnt*100,2) all_rate_3,
+          null as entry_cnt_6,
+          null as pre_amount_6,
+          null as review_amount_6,
+          null as loan_cnt_6,
+          null as pre_rate_6,
+          null as review_rate_6,
+          null as all_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_w
+          where dt='{dt}'
+          and terms=3
+          
+          
+          
+          union all
+
+
+          select
+          dateweek_of_entry,
+          null as entry_cnt,
+          null as pre_amount,
+          null as review_amount,
+          null as loan_cnt,
+          null as pre_rate,
+          null as review_rate,
+          null as all_rate,
+          null as entry_cnt_3,
+          null as pre_amount_3,
+          null as review_amount_3,
+          null as loan_cnt_3,
+          null as pre_rate_3,
+          null as review_rate_3,
+          null as all_rate_3,
+          entry_cnt as entry_cnt_6,
+          pre_amount as pre_amount_6,
+          review_amount as review_amount_6,
+          loan_cnt as loan_cnt_6,
+          round(pre_amount/entry_cnt*100,2) pre_rate_6,
+          round(review_amount/pre_amount*100,2) review_rate_6,
+          round(review_amount/entry_cnt*100,2) all_rate_6
+          
+          from ocredit_phones_dw.app_ocredit_phones_order_base_cube_w
+          where dt='{dt}'
+          and terms=6
+          
+          ) a
+          group by dateweek_of_entry
+          order by dateweek_of_entry 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

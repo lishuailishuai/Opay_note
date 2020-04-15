@@ -1,0 +1,268 @@
+1.
+https://confluence.opayride.com/pages/viewpage.action?pageId=14027663  
+新员工入职引导
+2.
+https://confluence.opayride.com/pages/viewpage.action?pageId=16417979&src=contextnavchildmode
+3.
+shuai.li  密码：opay
+
+http://hue.datalake.o-pay.in/hue/useradmin/users
+4.
+http://users.opaydev.com/auth/registered/
+5.
+　xiedondfkjdshfk
+a似懂非懂fddfffsdss
+
+
+ ssh -p 2222 shuai01.li@jms.ssh.opayride.com
+
+
+ssh -p 2222 shuai01.li@18.163.33.42
+
+
+98888Ls.
+绅士手222sddssdd尖叫鸡hhhheeeeeLsss
+
+Git config —global user.name “shuai01.li”
+Git config —global user.email “shuai01.li@opay-inc.com”           
+Ssh-keygen
+
+Git remote add origin dz
+Git push -u origin master
+Git clone dz 
+
+960817Ls.
+
+
+Git add 
+Git commit -m “”
+Git push  master
+
+
+git clone https://pha.static.kunlun.com/source/datalake-script.git
+
+
+Git restore 
+Git checkout —
+
+Git remote -v
+
+
+
+select count(*) sum from (
+select a.*,
+if(b.role='agent' and b.upgrade_status='upgraded' and b.upgrade_type='2', 
+b.upgrade_date, '9999-01-01 00:00:00') agent_upgrade_time 
+from
+ods_sqoop_base_user_df a
+left join
+ods_sqoop_base_user_upgrade_df b 
+on a.user_id=b.user_id
+) c where c.agent_upgrade_time='9999-01-01 00:00:00'
+group by c.user_id
+-- 两个job
+
+
+
+
+-- select a.*,
+-- case 
+-- when b.role='agent' and a.role='agent' or a.role='customer' and 
+-- b.upgrade_status='upgraded' and b.upgrade_type='2' then b.upgrade_date
+-- when a.role='agent' then '9999-01-01 00:00:00'
+-- else a.create_time end agent_upgrade_time
+-- from
+-- ods_sqoop_base_user_df a
+-- left join
+-- ods_sqoop_base_user_upgrade_df b 
+-- on a.user_id=b.user_id
+-- where a.dt='2019-11-18'
+
+
+
+960817ls.
+960817Ls.
+
+ssh -p 2222 shuai01.li@jms.ssh.opayride.com
+
+sudo -i
+. /data/venv/bin/activate
+
+airflow backfill -x -s 2019-06-17 -e 2019-06-18
+dwd_oride_order_base_include_test_di
+
+
+show partitions ods_sqoop_base_data_user_extend_df
+
+
+airflow backfill -x --rerun_failed_tasks -s 2019-09-01 -e 2019-09-08 app_oride_finance_driver_repayment_test_d
+
+
+airflow backfill -x --rerun_failed_tasks -t insert_oride_client_event_detail -s 2019-09-01 -e 2019-09-03 oride_source_log
+
+
+airfllow回溯命令
+https://confluence.opayride.com/pages/viewpage.action?pageId=14025890
+
+
+
+
+丁丁
+
+
+
+
+Git add file
+Git commit -m “shuoming”
+Git status
+
+Git checkout — file    chexiaoxiugai
+
+
+
+
+Git remote add origin dz
+Git push -u origin master
+Git clone dz 
+
+
+Git add 
+Git commit -m “”
+Git push  origin master
+
+
+git clone/init 不需要在git管理的仓库中进行
+
+https://blog.csdn.net/u014788838/article/details/87926151
+
+
+git fetch --all && git reset --hard origin/master && git pull
+Fetching origin
+Git pull 强制覆盖本地代码
+Head 表示最新版本
+如果提示git命令命令找不到，手打上去，不要复制粘贴
+
+
+我自己修改，远程上如果别人没有操作，我可以直接add   commit push
+                     因为按道理要防止冲突，先pull ,别人的修改和你的修改都会拉下来，你再自己合并修改
+                     再add. Commit  push.    这里的首先pull 显示already
+
+
+两个人修改的不是同一个文件，我本地修改，别人已经push，那么我是push不上去的，我先要进行pull
+因为操作的是不同文件，所以会进行合并，然后，我们不需要手动修改合并什么，直接add commit push 即可
+而且，add的只是自己的文件，别人的文件在我们pull的时候就已经覆盖了我们本地上的了。
+而且，第一次pull的时候，因为别人的修改已经同步到你的本地文件中，所以会显示别人的修改记录。
+
+
+
+你本地修改，别人已经修改push,你首先要pull,别人的修改会同步到你的本地文件，然后你再进行add commit push.  所以要保证你在本地所做的修改是对的。
+
+要知道，最终push的只是你创建的文件，其他远程库上保持不变，先pull只是为了解决冲突而已。
+
+邮箱：shuai01.li@opay-inc.com    960817Ls.
+opay wiki: https://confluence.opayride.com/pages/viewpage.action?pageId=14025853  shuai01.li  opay
+http://hue.datalake.o-pay.in/hue/useradmin/users  shuai.li  opay
+ ssh -p 2222 shuai01.li@jms.ssh.opayride.com     960817Ls.
+ hue.  shuai.li  opay
+ 开机：0817
+ 下载。apple id 密码：960817Ls
+ task调度。960817Ls.     shuai01.li
+ vcs密码：940706Bo.       shuai01.li
+
+
+
+airflow线上测试
+
+
+
+sudo -i
+cd /root/airflow/dags
+git pull
+sh /root/deploy_git_airflow.sh
+
+
+
+
+
+show partitions dwd_oride_h5_event_detail_hi
+country_code=nal/dt=2019-12-08/hour=00	
+country_code=nal/dt=2019-12-17/hour=12	
+
+
+
+
+下面的上线测试之后，就会有8 号的数据了。
+airflow test dwd_oride_h5_event_detail_hi dwd_oride_h5_event_detail_hi_task 2019-12-08 -sd 
+airflow test dwd_oride_h5_event_detail_hi h5_event_prev_hour_task 2019-12-08 -sd 
+
+
+airflow backfill -s 2019-12-03 -e 2019-12-06 dwd_h5_event_detail_hi -sd ...ps
+
+中国要快7小时
+20点半上线。  代码的开始日期是12.09.16
+
+airflow显示12.09.17
+
+airflow test dwd_oride_h5_event_detail_hi task_timeout_monitor 2019-12-05 -sd 
+
+
+分，时，天，月，年
+
+
+H5.   12-16.   30min.    小时增
+country_code=nal/dt=2019-12-08/hour=00
+country_code=nal/dt=2019-12-17/hour=12
+Airflow:12-17
+
+
+dwm_oride_driver_finance_di. 12-13.   1.30.   天
+country_code=GH/dt=2019-11-30	
+country_code=GH/dt=2019-12-01	
+Airflow:11-30
+
+
+
+
+
+beeline -u "jdbc:hive2://10.52.5.190:10000" -n airflow
+
+ beeline -u "jdbc:hive2://10.52.5.190:10000" -n airflow  -e “……..”
+
+ beeline -u "jdbc:hive2://10.52.5.190:10000" -n airflow -f aa.hql 
+
+
+
+
+sudo su - airflow
+. /home/airflow/venv/bin/activate
+
+
+SET mapreduce.job.queuename=root.data_bi;
+
+
+3.提交代码后，在cdh上git pull和jsgit后，
+同时也要在阿里侧执行sudo su - airflow
+sh script/git_pull.sh
+4.优先迁移dwd层，源头表为ods有数据的
+5.阿里对应airflow地址：http://8.208.14.165:8080/admin/airflow/tree?dag_id=dim_oride_city
+
+阿里侧airflow测试：
+sudo su - airflow
+. /home/airflow/venv/bin/activate
+
+
+SET mapreduce.job.queuename=root.airflow; 
+
+回溯是并行执行的
+
+
+mysql --default-character-set=utf8 -uread_only -py^n#^qk3 -h10.52.5.214 -P13332
+
+
+git restore 文件 取消改变
+
+
+
+
+
+

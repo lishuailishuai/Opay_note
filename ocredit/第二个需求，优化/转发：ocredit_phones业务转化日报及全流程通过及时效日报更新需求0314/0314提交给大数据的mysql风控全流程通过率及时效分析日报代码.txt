@@ -1,0 +1,122 @@
+
+---#mysql版代码
+select 
+date(t2.Acreate_time) as `进件日期`,
+count(distinct t2.opay_id) as `进件用户数`,
+count(distinct t2.order_id) as `进件订单数`,
+concat(round(count(distinct case when t2.order_status not in (10,12,13,99) then t2.opay_id else null end)/count(distinct t2.opay_id)*100,2),'%')  as `初审通过率`,
+concat(round(count(distinct case when t2.order_status not in (10,11,12,13,30,32,99) then t2.opay_id else null end)/count(distinct case when t2.order_status not in (10,12,13,99) then t2.opay_id else null end)*100,2),'%')  as `复审通过率`,
+concat(round(count(distinct case when t2.order_status not in (10,11,12,13,30,32,99) then t2.opay_id else null end)/count(distinct t2.opay_id)*100,2),'%')  as `风控整体通过率`,
+round(avg(t2.s1),2) as `进件-初审流转`,
+round(avg(t2.s2),2) as `初审用时`,
+round(avg(t2.s3),2) as `初审-复审流转`,
+round(avg(t2.s4),2)  as `复审用时`,
+round(avg(t2.s5),2) as `复审-支付流转`,
+round(avg(t2.s6),2) as `支付用时`,
+round(avg(t2.s7),2) as `支付-合同审核流转`,
+round(avg(t2.s8),2) as `合同审核用时`,
+round(avg(t2.s9),2) as `合同审核-放款用时`,
+round(avg(t2.s10),2) as `总用时(小时)`
+from 
+(
+select  
+t1.Acreate_time,
+t1.opay_id,
+t1.order_id,
+t1.user_id,
+t1.terms,
+t1.order_status,
+((unix_timestamp(t1.B1create_time) - unix_timestamp(t1.Acreate_time) ) / 60) as s1,
+case when t1.B1create_time is not NULL then ((unix_timestamp(t1.B1update_time) - unix_timestamp(t1.B1create_time) ) / 60) else NULL end as s2,
+case when t1.B2create_time is not NULL then ((unix_timestamp(t1.B2create_time) - unix_timestamp(t1.B1update_time) ) / 60) else NULL end as s3,
+case when t1.B2create_time is not NULL then ((unix_timestamp(t1.B2update_time) - unix_timestamp(t1.B2create_time) ) / 60) else NULL end as s4,
+case when t1.Ccreate_time is not NULL then ((unix_timestamp(t1.Ccreate_time) - unix_timestamp(t1.B2update_time) ) / 60) else NULL end as s5,
+case when t1.Ccreate_time is not NULL then ((unix_timestamp(t1.Cpay_time) - unix_timestamp(t1.Ccreate_time) ) / 60) else NULL end as s6,
+case when t1.apply_time is not NULL and t1.Cpay_time is not NULL  then ((unix_timestamp(t1.apply_time) - unix_timestamp(t1.Cpay_time) ) / 60) else NULL end as s7,
+case when t1.apply_time is not NULL and t1.last_audit_time is not NULL then ((unix_timestamp(t1.last_audit_time) - unix_timestamp(t1.apply_time) ) / 60) else NULL end as s8,
+case when t1.loan_time is not NULL and t1.last_audit_time is not NULL then ((unix_timestamp(t1.loan_time) - unix_timestamp(t1.last_audit_time) ) / 60) else NULL end as s9,
+case when t1.loan_time is not NULL then ((unix_timestamp(t1.loan_time) - unix_timestamp(t1.Acreate_time) ) / (3600)) else NULL end as s10
+from 
+(
+select 
+distinct
+a.opay_id,
+a.order_id ,
+a.user_id,
+a.order_status,
+a.create_time as `Acreate_time`,
+a.loan_time,
+a.terms,
+a.down_payment,
+b1.create_time as `B1create_time`,
+b1.update_time as `B1update_time`,
+b2.create_time as `B2create_time`,
+b2.update_time as `B2update_time`,
+c.create_time as `Ccreate_time`,
+c.pay_time as `Cpay_time`,
+d.apply_time,
+d.last_audit_time
+from 
+(select 
+order_id,
+opay_id,
+user_id,
+order_status,
+pay_status,
+payment_status,
+create_time,
+loan_time,
+terms,
+down_payment/100 as down_payment,
+loan_amount/100 as loan_amount
+from oloan.t_order
+where business_type='0'
+and date(create_time) <= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+and user_id not in
+(
+'1209783514507214849',
+'1209126038292123650',
+'1210903150317494274',
+'1214471918163460097',
+'1215642304343425026',
+'1226878328587288578')
+) as a
+
+left join 
+(
+select order_id,min(create_time) as create_time,max(update_time) as update_time
+from  oloan.t_order_audit_history  
+where audit_type='1'
+group by order_id
+)b1 on a.order_id=b1.order_id
+
+left join 
+(
+select order_id,min(create_time) as create_time,max(update_time) as update_time
+from  oloan.t_order_audit_history   
+where audit_type='2'
+group by order_id
+)b2 on a.order_id=b2.order_id
+
+left join
+(
+select order_id,min(create_time) as create_time,max(pay_time) as pay_time
+from oloan.t_pay_order   
+where pay_type='0'
+and business_type='0'
+group by order_id
+) as c on a.order_id=c.order_id
+
+left join 
+(
+select order_id,min(apply_time) as apply_time,max(last_audit_time) as last_audit_time,
+max(final_audit_pass) as final_audit_pass
+from oloan.t_contract     
+where business_type='0'
+group by order_id
+)as d
+on a.order_id=d.order_id 
+)t1
+)t2 
+group by date(t2.Acreate_time)
+order by `进件日期` desc 

@@ -1,0 +1,803 @@
+
+
+
+
+C补跟GMV一样、平台抽成比GMV还要大很多、手机还款(理论)、补录份子钱
+
+
+C补跟GMV、平台抽成、手机还款(理论)、补录份子钱 里面有现成的sql
+
+
+
+
+oride:
+       mysql --default-character-set=utf8 -uread_only -p -h10.52.5.214 -P13332
+        密码：y^n#^qk3
+
+
+dwm_oride_order_base_di
+
+1	CREATE EXTERNAL TABLE `dwm_oride_order_base_di`(
+2	  `order_id` bigint COMMENT '订单ID', 
+3	  `city_id` bigint COMMENT '城市ID', 
+4	  `product_id` int COMMENT '下单业务类型', 
+5	  `driver_serv_type` int COMMENT '接单后业务类型，和司机ID绑定', 
+6	  `create_time` string COMMENT '下单时间', 
+7	  `is_peak` int COMMENT '是否高峰', 
+8	  `driver_id` bigint COMMENT '司机id', 
+9	  `passenger_id` bigint COMMENT '乘客ID', 
+10	  `is_sys_cancel` int COMMENT '是否系统取消', 
+11	  `is_after_cancel` int COMMENT '是否应答后取消', 
+12	  `is_passanger_before_cancel` int COMMENT '是否应答前乘客取消', 
+13	  `is_passanger_after_cancel` int COMMENT '是否应答后乘客取消', 
+14	  `is_driver_after_cancel` int COMMENT '是否应答后司机取消', 
+15	  `is_broadcast` int COMMENT '是否播单,包含播单但未播成功的', 
+16	  `is_succ_broadcast` int COMMENT '是否成功播单（push节点）', 
+17	  `is_accpet_show` int COMMENT '是否推送给骑手（骑手端打点show节点）', 
+18	  `is_accpet_click` int COMMENT '是否应答（骑手端打点click节点）', 
+19	  `is_request` int COMMENT '是否接单（应答）', 
+20	  `is_finish` int COMMENT '是否完单', 
+21	  `is_finished_pay` int COMMENT '是否完成支付', 
+22	  `take_order_dur` bigint COMMENT '应答时长', 
+23	  `pick_up_order_dur` bigint COMMENT '接驾时长', 
+24	  `cannel_pick_order_dur` bigint COMMENT '取消接驾时长', 
+25	  `wait_order_dur` bigint COMMENT '等待上车时长', 
+26	  `billing_order_dur` bigint COMMENT '计费时长', 
+27	  `pay_order_dur` bigint COMMENT '支付时长', 
+28	  `order_service_dur` bigint COMMENT '订单服务时长', 
+29	  `finished_order_dur` bigint COMMENT '支付完单做单时长', 
+30	  `user_order_total_dur` bigint COMMENT '乘客下单到行程结束总时长', 
+31	  `pick_up_distance` bigint COMMENT '接驾总距离（assign节点）暂没用', 
+32	  `order_assigned_cnt` bigint COMMENT '订单被分配次数（assign节点）暂没用', 
+33	  `broadcast_distance` bigint COMMENT '播单总距离（push节点）', 
+34	  `push_all_times_cnt` bigint COMMENT '播单总次数（push节点）', 
+35	  `succ_broadcast_distance` bigint COMMENT '成功播单总距离（push节点）', 
+36	  `succ_push_all_times` bigint COMMENT '成功播单总次数（push节点）', 
+37	  `request_order_distance_inpush` bigint COMMENT '抢单阶段接驾距离(应答)', 
+38	  `is_td_request_inpush` int COMMENT '抢单阶段应答单量，不包含招手停、拼车、包车(应答)', 
+39	  `finish_order_distance_inpush` bigint COMMENT '抢单阶段接驾距离(完单)', 
+40	  `is_td_finish_inpush` int COMMENT '抢单阶段完单量，不包含招手停、拼车、包车(完单)', 
+41	  `driver_show_times_cnt` bigint COMMENT '骑手端推送给司机总次数（骑手端show节点）', 
+42	  `driver_click_times_cnt` bigint COMMENT '司机应答总次数（骑手端click节点）', 
+43	  `order_onride_distance` bigint COMMENT '送驾距离', 
+44	  `price` bigint COMMENT 'gmv', 
+45	  `pay_amount` bigint COMMENT '实际支付金额', 
+46	  `is_valid` int COMMENT '是否有效订单', 
+47	  `is_opay_pay` int COMMENT '是否opay支付', 
+48	  `is_succ_pay` int COMMENT '是否成功支付', 
+49	  `is_wet_order` int COMMENT '是否湿单', 
+50	  `score` int COMMENT '订单评分', 
+51	  `pax_num` int COMMENT '乘客数', 
+52	  `is_carpool` int COMMENT '是否拼车', 
+53	  `is_chartered_bus` int COMMENT '是否包车', 
+54	  `is_carpool_success` int COMMENT '是否拼车成功', 
+55	  `is_strong_dispatch` int COMMENT '是否强派1：是，0:否', 
+56	  `cancel_feedback` int COMMENT '是否有取消反馈', 
+57	  `status` int COMMENT '订单状态 (0: wait assign, 1: pick up passenger, 2: wait passenger, 3: send passenger, 4: arrive destination, 5: finished, 6:cancel,13:乘客取消待支付)', 
+58	  `estimate_price` double COMMENT '预估价格', 
+59	  `is_driver_accept_show` int COMMENT '是否在骑手端前端展示订单', 
+60	  `is_arrive_receive_point` int COMMENT '司机是否到达接客点', 
+61	  `pay_mode` int COMMENT '支付方式（0: 未知, 1: 线下支付, 2: opay, 3: 余额）', 
+62	  `falsify` int COMMENT '用户罚款', 
+63	  `falsify_driver_cancel` int COMMENT '司机取消罚款', 
+64	  `driver_price` double COMMENT '司机价格', 
+65	  `tip` double COMMENT '小费', 
+66	  `surcharge` double COMMENT '高速费', 
+67	  `pax_insurance_price` double COMMENT '乘客保险费', 
+68	  `coupon_amount` double COMMENT '使用的优惠券金额', 
+69	  `malice_brush_driver_deduct` double COMMENT '恶意刷单司机扣款', 
+70	  `falsify_get` double COMMENT '司机取消罚款用户实际获得', 
+71	  `malice_brush_user_reward` double COMMENT '恶意刷单乘客奖励', 
+72	  `falsify_get_driver_cancel` double COMMENT '司机取消罚款用户实际获得', 
+73	  `ord_to_cancel_dur` bigint COMMENT '当天下单到取消时长', 
+74	  `driver_arrive_car_point_dur` bigint COMMENT '司机接单到到达上车点时长', 
+75	  `ord_to_arrive_dur` bigint COMMENT '下单到送达总时长', 
+76	  `user_version` string COMMENT '乘客端版本（发单)', 
+77	  `client_os` string COMMENT '乘客端操作系统')
+78	COMMENT '订单dwm基础表'
+79	PARTITIONED BY ( 
+80	  `country_code` string COMMENT '?????', 
+81	  `dt` string COMMENT '????')
+
+
+
+
+dwm：轻度汇总，也是有数据的明细
+dwd: 数据的明细层，降纬，多张表形成的宽表数据明细也是常常见的（多表之间有关联条件）只要能形成明细就是dwd
+
+增量表一般用到的数据只是当天创建的，不要更新数据
+AND from_unixtime((t.create_time + 1 * 60 * 60 * 1),'yyyy-MM-dd') = '{pt}'
+
+dwd增量=ods增量+ods全量（比如：纬度表）+ods全量     dwd_oride_order_base_include_test_di
+三表关联，最终的数据是要根据增量数据决定的，所以最终是增量
+
+
+明细层加字段，比如三张表，只要能根据关联条件关联上的，重要的，常用的，能加的就都给加上。
+
+dwm是有多张dwd,每张dwd又是多张ods，具体层之间以及表之间的设计是根据需求而定的
+
+
+一般字段包含原始dt天的，都是增量表或增量报表
+
+
+增量表
+ LEFT OUTER JOIN 
+    (
+        SELECT 
+        order_id,
+        count(1) driver_click_times  --司机应答次数,司机点接单次数
+        FROM 
+        oride_dw.dwd_oride_driver_accept_order_click_detail_di
+        WHERE dt='{pt}'
+        GROUP BY order_id
+    ) click on ord.order_id = click.order_id
+
+left outer join 
+    (
+        select * from oride_dw.dwd_oride_order_mark_df 
+        where dt='{pt}' and substr(create_time,1,10)='{pt}'
+    )  mark_ord on ord.order_id=mark_ord.order_id;    -------订单表数据量大，当天只统计当天的
+
+最终得增量表
+
+dwd表是增量根据需求有可能只是根据ods表创建时间得到的，比如订单，数据量大，当天只分析当天的
+AND from_unixtime((t.create_time + 1 * 60 * 60 * 1),'yyyy-MM-dd') = '{pt}'
+
+
+
+
+ left join
+        --司机奖励金,统计理论b端补贴用
+        
+        (
+        select driver_id,
+               sum(amount) as reward_amount  --司机奖励金
+        from oride_dw.dwd_oride_driver_reward_di  --目前是全量表，后续会变成增量表
+        where dt='{pt}'
+        and from_unixtime(create_time,'yyyy-MM-dd')='{pt}'  --后续该限制条件要去除
+        group by driver_id
+        ) reward
+        on dri.driver_id=reward.driver_id
+        
+
+1.gmv条件
+2.day是什么时间. b补 更新？
+3.表的字段
+4.你们全量统计，我们要增量统计。你们给出的字段，原始天，增量吧
+5.group by 的纬度。你们少
+6.
+
+
+
+
+统计多个指标，公共的纬度放在group by 后面，个别的放在各自条件中，例如sum(if())中
+原始：满足条件的进行group by ,现在：先进行group by 再过滤条件
+  sum(if(is_finished_pay=1 and is_succ_pay=1 and pay_mode not in(0,1) and status = 5 and product_id IN (1, 2,3,4),nvl(price,0)+nvl(tip,0)+nvl(surcharge,0)+nvl(pax_insurance_price,0),0)) as online_pay_price,--线上支付成功金额            
+。。。。
+from oride_dw.dwm_oride_order_base_di 
+          where dt = '{pt}' and city_id != 99901 and product_id <>99
+          group by city_id,product_id,dt,country_code
+
+
+看app_oride_finance_revenue_monitor_d与需求03-02
+
+在计算指标，表的字段一定要横向看，方便理解
+
+
+a,b,c，dd
+三个维度，一个指标
+按表b,c统计dd的值======先按a统计好，再按b,c去统计
+按照不同的纬度去统计，互不影响
+
+
+
+直接可以写dt, product_id哦！
+select dt, product_id,sum(amount+coupon_amount-driver_price) take_rate from
+( 
+ select distinct t1.dt,
+ t1.product_id,
+ t1.order_id,
+ t1.price,
+ t1.driver_price,
+ t2.amount,
+ t2.coupon_amount
+ from t1
+ inner join t2
+ on t1.order_id=t2.id 
+)a
+group by dt,product_id
+order by dt,product_id;
+
+
+
+
+小时全量表：
+之前dim从ods出，现在从dwd出
+为什么不直接也是从ods出，因为通过dwd可以过滤，对biinlog日志去重，获取最新数据
+
+1.dim_oride_driver_base
+
+
+ods_binlog_base_data_driver_hi       --ods_binlog_base_data_driver_h_his               dwd_oride_driver_hf
+dim_oride_driver_base
+ods_sqoop_base_data_driver_extend_df   --ods_binlog_base_data_driver_extend_h_his      dwd_oride_driver_extend_hf
+dim_oride_city
+
+
+
+
+2.dim_oride_passenger_base
+
+
+ods_sqoop_base_data_user_df       --ods_binlog_base_data_user_h_his             dwd_oride_user_hf
+dwd_oride_passenger_extend_df
+    --dwd_oride_passenger_extend_df 
+    --ods_binlog_base_data_user_extend_hi   --ods_binlog_base_data_user_extend_h_his   dwd_oride_user_extend_hf 
+                                                （03-18才是完整的数据）
+
+
+
+
+
+小时全量表，24个小时数据量（每个小时都是全量，都在递增（历史数据和当前小时更新的）。小时为单位）
+》〉》〉》
+天全量表（天为单位）
+
+（小时增量也是大的。重复数据，第一个小时更新，第二个小时又更新）
+
+
+ods  创建时间，更新时间
+有时候没有创建时间，比如有什么注册时间什么的
+
+
+
+sqoop天增量与binlog小时增量不同：
+最大的特点：数据量的不同
+
+sqoop：获取mysql , mysql会更新，最终的状态
+
+binlog：获取mysql日志，很多的，所以做dwd的时候要有去重逻辑，只获取最新的数据（根据时间倒序，row_number）
+
+即使做成dwd，数据量还是远大于之前按天的，所以在做其他运算，从dwd出，也是要有去重（除了每小时更新的历史数据）逻辑的。
+
+
+注意下面的去重逻辑和base直接是可以获取字段，除了base也是可以直接写字段的:
+def dwd_oride_driver_extend_hf_sql_task(ds,hour):
+
+    HQL='''
+        SET hive.exec.parallel=TRUE;
+        SET hive.exec.dynamic.partition.mode=nonstrict;
+
+        insert overwrite table oride_dw.{table} partition(country_code,dt,hour)
+
+        SELECT
+          id , -- '司机 ID',
+          serv_mode ,-- '服务模式 (0: no service, 1: in service, 99:招手停)',
+          serv_status ,-- '服务状态 (0: wait assign, 1: pick up, 2:wait, 3: send, 4:arrive, 5:pick order)',
+          order_rate ,-- '接单率',
+          .......
+          base.local_register_time as register_time ,-- '注册时间',
+          base.local_login_time as login_time ,-- '最后登陆时间',
+          is_bind, --, '状态 0 未绑定 1 已绑定',
+          base.local_first_bind_time as first_bind_time ,-- '初次绑定时间',
+          ........
+          language  ,-- '客户端语言',
+          base.local_end_service_time as end_service_time ,-- '专车司机结束收份子钱时间',
+          base.local_last_online_time as last_online_time ,-- '最后上线时间',
+          base.local_last_offline_time as last_offline_time ,-- '最后下线时间',
+          ......
+          'nal' as country_code,
+          '{pt}' as dt,
+          hour
+    FROM
+    (
+     select
+        *
+     from 
+     (  
+        select
+            *,
+             if(t.register_time=0,0,(t.register_time + 1 * 60 * 60)) as local_register_time,
+             if(t.login_time=0,0,(t.login_time + 1 * 60 * 60)) as local_login_time ,
+             if(t.first_bind_time=0,0,(t.first_bind_time + 1 * 60 * 60)) as local_first_bind_time ,
+             if(t.end_service_time=0,0,(t.end_service_time + 1 * 60 * 60)) as local_end_service_time ,
+             if(t.last_online_time=0,0,(t.last_online_time + 1 * 60 * 60)) as local_last_online_time ,
+             if(t.last_offline_time=0,0,(t.last_offline_time + 1 * 60 * 60)) as local_last_offline_time ,
+             from_unixtime((unix_timestamp(regexp_replace(regexp_replace(t.updated_at,'T',' '),'Z',''))+3600),'yyyy-MM-dd HH:mm:ss') as updated_time,
+             row_number() over(partition by t.id order by t.`__ts_ms` desc,t.`__file` desc,cast(t.`__pos` as int) desc) as order_by
+             
+        FROM oride_dw_ods.ods_binlog_base_data_driver_extend_h_his  t
+
+        WHERE  dt='{pt}' and hour='{now_hour}'
+        ) t1
+    where t1.`__deleted` = 'false' and t1.order_by = 1
+) base;
+
+
+
+
+
+
+注意：下面的写法，虽然小时增量，我在1小时更新，我又在2小时更新，那么就有两个我了，总和数据量就会很大
+下面的写法，一天就是当天的增量数据，没有重复。
+小时表，按照天，这样取，就会不会有重复数据了。
+SELECT *,
+                row_number() over(partition by t.id order by t.`__ts_ms` DESC) AS rn1
+            FROM oride_dw_ods.ods_binlog_base_data_driver_hi as t
+            WHERE concat_ws(' ',dt,hour) BETWEEN '{bef_yes_day} 23' AND '{pt} 22'
+
+
+
+
+dwd的小时全量表中：
+每小时的数据都是唯一的，小时与小时之间是不唯一的
+
+
+
+
+sqoop天变成小时级别binlog，因为1.实效性更高，当天就采集（utc时间）当天的数据，后一小时采集前一小时，而尼日利亚比Utc快一个小时
+业务在尼日利亚开展，当天的就采集好当天的数据了。但实际上，还是离线跑，今天分析昨天的，这个实效性也就是采集的比较实时，但是通常
+是按天分析的，所以当天还是不能分析当天的，如果分析的是小时，当天就可以分析当天的。
+2.分析的数据就是真正当天的数据。之前sqoop:数据不是真正当天的。
+
+utc--1小时--拉各斯--7小时--中国
+
+数据产出在utc（所以采集是utc时间），业务开展在尼日利亚，
+代码中，{pt}是尼日利亚时间，什么创建时间什么的，是utc产出时间，所以代码中都是要加一个小时的
+
+binlog，分析数据更准确：因为有小时级别
+SELECT *,
+                row_number() over(partition by t.id order by t.`__ts_ms` DESC) AS rn1
+            FROM oride_dw_ods.ods_binlog_base_data_driver_hi as t
+            WHERE concat_ws(' ',dt,hour) BETWEEN '{bef_yes_day} 23' AND '{pt} 22'
+
+sqoop: 数据不准确，数据开始晚采了一个小时（当天的第一小时数据其实给缺失了），后来又多采了一个小时（这个小时其实是第二天的）
+FROM oride_dw_ods.ods_sqoop_base_data_driver_extend_df
+        WHERE dt = '{pt}'
+
+
+
+SELECT *
+            FROM oride_dw.dwd_oride_driver_extend_hf
+        where dt='{pt}' and hour=22 
+
+
+
+
+sqoop就是采集mysql的最终数据（唯一）
+binlog就是采集mysql的日志数据
+
+
+换成binlog,dim直接从dwd（1.过滤去重 2.业务时间加一个小时）出，以前是从ods出
+ods是直接采集过来的，数据产出是utc,所以ods(dwd)也是utc,业务时间，包括dt hour都是utc
+所以
+FROM oride_dw.dwd_oride_driver_extend_hf t
+        WHERE concat_ws(' ',dt,hour) BETWEEN '{bef_yes_day} 23' AND '{pt} 22'
+
+
+上面不对，下面才对
+SELECT *
+            FROM oride_dw.dwd_oride_driver_extend_hf
+        where dt='{pt}' and hour=22 
+
+
+
+
+hql字段名是不区分大小写的
+
+
+select 
+id
+from
+(
+select * from oride_dw.dwd_oride_driver_extend_hf
+limit 2
+) bb   --可以的
+
+
+
+
+
+# 依赖前天分区
+dim_oride_driver_base_prev_day_tesk = OssSensor(   //这个是依赖自身前一天的
+    task_id='dim_oride_driver_base_prev_day_tesk',
+    bucket_key='{hdfs_path_str}/dt={pt}/_SUCCESS'.format(
+        hdfs_path_str="oride/oride_dw/dim_oride_driver_base/country_code=NG",
+        pt='{{macros.ds_add(ds, -1)}}'
+    ),
+    bucket_name='opay-datalake',
+    poke_interval=60,  # 依赖不满足时，一分钟检查一次依赖状态
+    dag=dag
+)
+ods_binlog_base_data_driver_hi_prev_day_task = OssSensor(
+        task_id='ods_binlog_base_data_driver_hi_prev_day_task',
+        bucket_key='{hdfs_path_str}/dt={pt}/hour=23/_SUCCESS'.format(
+            hdfs_path_str="oride_binlog/oride_db.oride_data.data_driver",
+            pt='{{ds}}',
+            now_day='{{macros.ds_add(ds, +1)}}'
+        ),
+        bucket_name='opay-datalake',
+        poke_interval=60,  # 依赖不满足时，一分钟检查一次依赖状态
+        dag=dag
+)
+ods_sqoop_base_data_driver_extend_df_prev_day_tesk = OssSensor(
+    task_id='ods_sqoop_base_data_driver_extend_df_prev_day_tesk',
+    bucket_key='{hdfs_path_str}/dt={pt}/_SUCCESS'.format(
+        hdfs_path_str="oride_dw_sqoop/oride_data/data_driver_extend",
+        pt='{{ds}}'
+    ),
+    bucket_name='opay-datalake',
+    poke_interval=60,  # 依赖不满足时，一分钟检查一次依赖状态
+    dag=dag
+)
+
+
+
+
+
+下面：根据底层增量表去实现上层的全量表
+
+SELECT
+            nvl(data_user_ext.id,data_user_ext_bef.passenger_id) as passenger_id,--'用户 ID', 
+            nvl(data_user_ext.take_order,data_user_ext_bef.take_order) as take_order,--'接单数量', 
+            nvl(data_user_ext.avg_score,data_user_ext_bef.avg_score) as avg_score,--'平均评分', 
+            nvl(data_user_ext.total_score,data_user_ext_bef.total_score) as total_score,--'总评分', 
+            nvl(data_user_ext.score_times,data_user_ext_bef.score_times) as score_times,--'评分次数', 
+            nvl(data_user_ext.bonus,data_user_ext_bef.bonus) as bonus,--'奖励金', 
+            nvl(data_user_ext.balance,data_user_ext_bef.balance) as balance,--'余额', 
+            nvl(data_user_ext.last_order_id,data_user_ext_bef.last_order_id) as last_order_id,--'最近一个订单的ID', 
+            nvl((data_user_ext.register_time+1*60*60),data_user_ext_bef.register_time) as register_time,--'注册时间', 
+            nvl((data_user_ext.login_time+1*60*60),data_user_ext_bef.login_time) as login_time,--'最后登陆时间', 
+            nvl(data_user_ext.inviter_role,data_user_ext_bef.inviter_role) as inviter_role,--'', 
+            nvl(data_user_ext.inviter_id,data_user_ext_bef.inviter_id) as inviter_id,--'', 
+            nvl(data_user_ext.invite_num,data_user_ext_bef.invite_num) as invite_num,--'', 
+            nvl(data_user_ext.invite_complete_num,data_user_ext_bef.invite_complete_num) as invite_complete_num,--'', 
+            nvl(data_user_ext.invite_award,data_user_ext_bef.invite_award) as invite_award,--'', 
+            nvl(data_user_ext.updated_at,data_user_ext_bef.updated_at) as updated_at,--'最后更新时间', 
+            nvl(data_user_ext.pay_type,data_user_ext_bef.pay_type) as pay_type,--'user auto pay settings(-1: not set 0: manual payment 1: auto payment)', 
+            nvl(data_user_ext.city_id,data_user_ext_bef.city_id) as city_id,--'注册城市', 
+            nvl(data_user_ext.language,data_user_ext_bef.language) as language,--'客户端语言', 
+            nvl(data_user_ext.finish_order,data_user_ext_bef.finish_order) as finish_order,--'完单数量', 
+            nvl(data_user_ext.mark,data_user_ext_bef.mark) as mark,--'按位通用标记'
+            nvl(data_user_ext.country_id,data_user_ext_bef.country_id) as country_id,  --所属国家
+            nvl(data_user_ext.gender,data_user_ext_bef.gender) as gender, --性别:0.未设置 1.男 2.女
+            nvl(data_user_ext.version,data_user_ext_bef.version) as version,  --乘客端版本号
+            nvl(data_user_ext.protocol_no,data_user_ext_bef.protocol_no) as protocol_no, --签约opay 免密支付协议号
+            nvl((data_user_ext.protocol_time+1*3600),data_user_ext_bef.protocol_time) as protocol_time, --签约/解约时间
+            'nal' as country_code,
+            '{pt}' as dt
+        FROM
+        (select * 
+        from oride_dw.dwd_oride_passenger_extend_df 
+        where dt='{bef_yes_day}') data_user_ext_bef
+        full outer join 
+        (
+            SELECT 
+                * 
+            FROM
+             (
+                SELECT 
+                    *,
+                     row_number() over(partition by t.id order by t.`__ts_ms` desc) as order_by
+                FROM oride_dw_ods.ods_binlog_base_data_user_extend_hi t
+                WHERE concat_ws(' ',dt,hour) BETWEEN '{bef_yes_day} 23' AND '{pt} 22'--取昨天1天数据与今天早上00数据
+             ) t1
+            where t1.`__deleted` = 'false' and t1.order_by = 1
+        ) data_user_ext
+        on data_user_ext_bef.passenger_id=data_user_ext.id;
+
+
+
+
+
+select a,b,c,d--查询的第一行数据就是针对ee表的第一行数据的
+from ee（该表字段只有 a,b）
+
+
+
+select nvl(terms,-10000) as terms,
+           nvl(week_of_entry,'-10000') as week_of_entry,
+           concat_ws('-',regexp_replace(substr(minweek_of_entry,6,10),'-',''),regexp_replace(substr(date_add(minweek_of_entry,6),6,10),'-','')) as dateweek_of_entry, --所在周日期区间
+           entry_cnt, --进件量
+           loan_cnt,  --`放款数` ,
+           loan_amount_usd, --`贷款金额_USD` 
+           pre_amount,-- `初审通过量`
+           review_amount,-- `复审通过量`
+           'nal' as country_code,
+           '{pt}' as dt
+    from(select terms,--分期数
+          weekofyear(date_of_entry) as week_of_entry, --进件日期所在周
+          min(date_of_entry) as minweek_of_entry, --进件日期所在周对应最小日期
+          max(date_of_entry) as maxweek_of_entry, --进件日期所在周对应最大日期
+          count(distinct opay_id) as entry_cnt, --进件量
+          count(distinct (if(order_status='81',opay_id,null))) as loan_cnt, --`放款数` ,
+          sum(if(order_status='81',(nvl(loan_amount,0)/100)*0.2712/100,0)) as loan_amount_usd, --`贷款金额_USD` 
+          count(distinct case when order_status not in (10,12,13,99) then opay_id else null end) as pre_amount,-- `初审通过量` 
+          count(distinct case when order_status not in (10,11,12,13,30,32,99) then opay_id else null end) as review_amount -- `复审通过量`
+    from ocredit_phones_dw.dwd_ocredit_phones_order_base_df
+    where dt='{pt}'
+    and weekofyear(dt)-weekofyear(date_of_entry)>=0  --跨年后来考虑
+    and weekofyear(dt)-weekofyear(date_of_entry)<4
+    group by terms,weekofyear(date_of_entry)
+    grouping sets(weekofyear(date_of_entry),
+          (terms,weekofyear(date_of_entry)))
+          ) t;
+
+
+
+
+select  a,
+sum(entry_cnt_8) as entry_cnt_8,
+          sum(loan_cnt_8) as loan_cnt_8,
+          format_number(sum(loan_amount_usd_8),0) as loan_amount_usd_8,
+          format_number(sum(average_usd_8),0) as average_usd_8,
+          concat(sum(business_rate_8),'%') as business_rate_8
+group by a
+
+
+
+
+40 * * * *
+小时表，每40min执行一次
+
+40 01 * * *
+天表，只会执行一次
+
+
+
+司机维度表：小时全量
+乘客维度表：小时增量
+
+维度表由小时增量或者全量获取，维度表是全量的，只有天的分区
+dwd可以是dt和hour，也可以做成只是dt的
+
+ahi----dwddf
+ahi----ahi关联（full join）昨天的dwddf做成dwddf
+
+
+ahf----dwddf 直接就可以做
+
+
+
+维度表，ods（只是指sqoop哦）或者dwd里面的数据都是唯一的。
+
+
+
+
+mysql:只有业务时间，创建时间什么的
+ods:采集增加了dt或dt和hour
+dwd:又增加了country_code分区
+
+
+"20 * * * *"  小时表
+今天是24号，24号 00:20跑的是23号的23:20的数据，也就是23号的23hour分区，
+24号 01:20跑的是24号的00:20的数据，也就是24号的00hour分区，
+这里小时采集是有20min的误差的。
+注意:这是UTC时间哦
+
+为什么不改成"00 * * * *"  小时表？这就没误差了呀
+
+
+
+
+验证小时级别数据: 10:34  只有00和01两个分区
+
+采集的小时表：
+select 
+          count(1)
+          from
+          (
+          select 
+              *,
+    row_number() over(partition by t.id order by t.`__ts_ms` desc,t.`__file` desc,cast(t.`__pos` as int) desc) as order_by
+          from
+          oride_dw_ods.ods_binlog_base_data_user_extend_h_his t
+          WHERE  dt='${pt}' and hour='01'
+          ) t1
+          where t1.`__deleted` = 'false' and t1.order_by = 1
+mysql表：
+select count(1) from data_user_extend;
+
+
+
+目前的认知：
+binlog小时增量：不是按照创建时间或更新时间得到的（验证得到），而且和sqoop没关系吧（猜）
+binlog小时全量：和sqoop有关系吧（猜）
+
+
+
+FROM
+  (SELECT *
+
+FROM oride_dw.dwd_oride_data_city_conf_hf
+   WHERE dt='{pt}' and hour='23') cit
+
+
+
+
+
+
+dwd的小时全量表:
+select 
+          id,--'用户 ID', 
+          phone_number,--'手机号', 
+          first_name,--'名', 
+          last_name,--'性', 
+          promoter_code,--'推广员代码', 
+          from_unixtime(unix_timestamp(updated_at)+3600,'yyyy-MM-dd HH:mm:ss'),--'最后更新时间',
+          opay_id,--'用户OPAYID'
+          'nal' as country_code,
+          '{pt}' as dt,
+          hour
+          from 
+          (
+          select 
+            *
+          from(
+              select 
+                 *,
+               row_number() over(partition by t.id order by t.`__ts_ms` desc,t.`__file` desc,cast(t.`__pos` as int) desc) as order_by
+              from
+          oride_dw_ods.ods_binlog_base_data_user_h_his t
+          WHERE  dt='{pt}' and hour='{now_hour}'
+          )t1
+          where t1.`__deleted` = 'false' and t1.order_by = 1
+          )t2;
+
+
+
+
+
+
+mysql,业务那边，只要对mysql的表进行操作，我这边sqoop采集的时候都会抓取到，
+导致，有可能Mysql那边添加一个重复字段，他们那边不执行，但我这边就会报错，需要删除表重新执行。
+
+
+创建表不指定location,这是不行的
+ LOCATION                                           |
+|   'hdfs://emr-cluster/user/hive/warehouse/oride_dw.db/dim_oride_driver_base_hi' |
+
+
+应该：是存在阿里上的
+LOCATION  
+'oss://opay-datalake/oride/oride_dw/dim_oride_driver_base_hi'
+
+
+
+
+
+ 2020-03-25T09:00:16Z  
+
+ nvl(from_unixtime((unix_timestamp(regexp_replace(regexp_replace(data_driver.updated_at,'T',' '),'Z',''))+3600),'yyyy-MM-dd HH:mm:ss'),data_driver_bef.updated_at),--'最后更新时间',
+
+
+
+
+
+
+
+GH:加纳  与英国一样  零时区   中国要快8小时
+NG：尼日利亚   东一区    中国要快7小时
+nal:默认
+
+
+
+时间延后，晚上设置的，26号
+10 00 * * * 原先
+
+"25 00 * * *"  改后
+
+airflow上会保留之前的26号，然后会自动执行又一个26号
+
+
+时间提前，就只有一个26，需要你手动回溯重跑
+
+
+
+
+
+
+
+
+======================每天也就是700左右的乘客数量
+select count(*) from
+dim_oride_passenger_base
+where dt='2020-03-22'
+--4134444
+
+select count(*) from
+dim_oride_passenger_base
+where dt='2020-03-21'
+--4133801
+
+--3.24  不到11点吧  只有00和01两个分区
+select 
+          count(1)
+          from
+          (
+          select 
+              *,
+    row_number() over(partition by t.id order by t.`__ts_ms` desc,t.`__file` desc,cast(t.`__pos` as int) desc) as order_by
+          from
+          oride_dw_ods.ods_binlog_base_data_user_extend_h_his t
+          WHERE  dt='${pt}' and hour='01'
+          ) t1
+          where t1.`__deleted` = 'false' and t1.order_by = 1
+--4131369
+
+
+
+select count(1) from data_user_extend;
+--4135143 
+
+
+
+
+小时增量表替换之前的sqoop
+
+dwd全量（真正当天和历史的） 与之前  sqoop（不是当天，先少了一个小时，后又多了一个小时） 相比都是全量数据，
+
+司机一样：因为司机一般都固定不变
+select count(*) from 
+oride_dw.dim_oride_driver_base_hi
+where dt='2020-03-26'
+--121205
+
+
+
+select count(*) from 
+oride_dw.dim_oride_driver_base
+where dt='2020-03-26'
+--121205
+
+
+
+乘客不一样：因为有小时之间的误差，乘客是随意增加的
+select count(*) from
+dim_oride_passenger_base_hi
+where dt='2020-03-26'
+--4137121
+
+select count(*) from
+dim_oride_passenger_base
+where dt='2020-03-26'
+--4137146
+
+
+
+
+
+================================
+比如订单表：
+解决：数据量大的问题
+     历史快照的问题
+
+增量表：可以  1.解决数据量大的问题，2查询全表并且按照订单号row_number,更新时间倒序，取第一个 （和小时增量，小时全量 获取当
+天增量数据，全部数据，去重，一样）这样可以获取全部数据（相当于全量表的最新一天）3.获取其中一天的历史快照
+
+增量表和全量表可以互相转化，全量表可以根据创建时间或者更新时间获取一天的历史快照
+
+
+拉链表：更可以 1.解决数据量大的问题，2获取全量数据，这里就说获取当前所有有效的记录，是真正意义上的全量数据。
+3获取其中一天的历史快照，相比增量要多，是真正的当天的历史全部数据。                  
+
+ ------但是这表也是可以根据创建时间和开始时间（也就是更新时间）去获取真正的增量数据
+
+拉链表的开始时间也就是更新时间
+拉链表与binlog，binlog是从采集角度而言的，只有创建和更新时间，而拉链表多了一个结束时间
+
+拉链表也是一张表，只不过没有分区而已
+
+
+
+=================================
+
+
+
+
+
+
+
+
+
+

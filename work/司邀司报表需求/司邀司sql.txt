@@ -1,0 +1,207 @@
+
+
+submit_data_num：提交资料人数
+
+yunyingchuli：运营已处理人数
+
+yunyingyuyue：运营已预约
+
+audit_success_num：成功通过审核人数
+
+finish_driver_cnt：完单司机数量
+
+guide：老司机带人数量
+
+
+1.group by 如果没有聚合函数，那么后面要写上全部的字段，而且不能是别名。
+
+2.explode 不能有其他字段，只能单独使用：
+SELECT explode(array(1,2,3)) AS element;
+select explode(split(goods_id,',')) as goods_id from explode_lateral_view;
+
+3. 展开两个字段，会造成数据混乱和无用数据，要想同时展开两个字段，一一配对，看4
+select temp.dt,temp.city_name,temp.product_id,know_orider,
+zhibiaomingg,zhibiaozhii
+from temp
+lateral view explode(split(temp.zhibiaoming,',')) a as zhibiaomingg
+lateral view explode(split(temp.zhibiaozhi,',')) ab as zhibiaozhii
+
+4.这样，如果两个字段展开都是5个，那么可以一一配对上，第一个是索引（从0开始），第二个是值
+select temp.dt,temp.city_name,temp.product_id,know_orider,
+zhibiaomingg,zhibiaozhii
+from temp
+lateral view posexplode(split(temp.zhibiaoming,',')) a as zhibiaominggindex,zhibiaomingg
+lateral view posexplode(split(temp.zhibiaozhi,',')) ab as zhibiaozhiiindex,zhibiaozhii
+where zhibiaominggindex=zhibiaozhiiindex
+
+
+select index,id from test lateral view posexplode(split(ss,',')) t as index,id   使用一次该函数
+
+使用两次该函数可以实现多列转多行
+
+=============================================================
+with
+tempone as
+(
+select a.adt dt,a.aid admin_id,a.suma aaa,b.sumb bbb
+from
+(
+select a.dt adt,a.admin_id aid,count(distinct rider_id) suma --运营已处理人数
+from 
+oride_dw_ods.ods_sqoop_base_rider_apply_live_info_df a
+where a.live_status in (1,2)
+group by a.dt,a.admin_id
+) a
+left join
+(
+select a.dt adt,a.admin_id aid,count(distinct rider_id) sumb --运营已预约人数
+from 
+oride_dw_ods.ods_sqoop_base_rider_apply_live_info_df a
+where a.live_status=1
+group by a.dt,a.admin_id
+) b on a.adt=b.adt and a.aid=b.aid
+),
+
+temp as(
+SELECT base.dt,
+    t3.city_name,
+    driver_type as product_id,--业务线
+    know_orider,--渠道
+    "submit_data_num,yunyingchuli,yunyingyuyue,audit_success_num,finish_driver_cnt" zhibiaoming,
+    concat(count(driver_id),',',
+    tempone.aaa,',',
+    tempone.bbb,',',
+    count(if(base.status=2,driver_id,null)),',',
+    count(if(t2.driver_order_id is NOT NULL and status=2,driver_id,null))) zhibiaozhi
+from
+(
+    SELECT *
+    from oride_dw.dwd_oride_rider_signups_df
+    where know_orider=13
+)base 
+LEFT JOIN
+(
+SELECT driver_id as driver_order_id from oride_dw.dwm_oride_order_base_di 
+where is_finish=1
+GROUP BY driver_id
+) as t2
+on base.driver_id=t2.driver_order_id
+LEFT JOIN
+(
+    SELECT city_id,city_name,country_name
+    from oride_dw.dim_oride_city 
+)as t3
+on base.city=t3.city_id
+left join
+(select country_name_en
+from oride_dw.dim_oride_country_base
+where country_name_en='Nigeria'
+) t4 on t3.country_name=t4.country_name_en
+left join
+tempone on base.admin_id=tempone.admin_id
+GROUP BY base.dt,t3.city_name,driver_type,know_orider,tempone.aaa,tempone.bbb),
+
+tempp as(
+
+   SELECT base.dt,
+    t3.city_name,
+    driver_type as product_id,--业务线
+    know_orider,--渠道
+    "submit_data_num,guide,audit_success_num,finish_driver_cnt" zhibiaoming,
+    concat(count(driver_id),',',
+    count(if(base.know_orider_extend is not null,base.know_orider_extend,null)),',',
+    count(if(base.status=2,driver_id,null)),',',
+    count(if(t2.driver_order_id is NOT NULL and status=2,driver_id,null))) zhibiaozhi
+
+from
+(
+    SELECT *
+    from oride_dw.dwd_oride_rider_signups_df
+    where know_orider=7
+)base 
+LEFT JOIN
+(
+SELECT driver_id as driver_order_id from oride_dw.dwm_oride_order_base_di
+where is_td_finish_inpush=1
+GROUP BY driver_id
+) as t2
+on base.driver_id=t2.driver_order_id
+LEFT JOIN
+(
+    SELECT city_id,city_name,country_name
+    from oride_dw.dim_oride_city 
+)as t3
+on base.city=t3.city_id
+left join
+(select country_name_en
+from oride_dw.dim_oride_country_base
+where country_name_en='Nigeria'
+) t4 on t3.country_name=t4.country_name_en
+GROUP BY base.dt,t3.city_name,driver_type,know_orider
+),
+
+temppp as(
+SELECT base.dt,
+    t3.city_name,
+    driver_type as product_id,--业务线
+    know_orider,--渠道
+    "submit_data_num,yunyingchuli,yunyingyuyue,audit_success_num,finish_driver_cnt" zhibiaoming,
+    concat(count(driver_id),',',
+    tempone.aaa,',',
+    tempone.bbb,',',
+    count(if(base.status=2,driver_id,null)),',',
+    count(if(t2.driver_order_id is NOT NULL and status=2,driver_id,null))) zhibiaozhi
+from
+(
+    SELECT *
+    from oride_dw.dwd_oride_rider_signups_df
+    where know_orider=14
+)base 
+LEFT JOIN
+(
+SELECT driver_id as driver_order_id from oride_dw.dwm_oride_order_base_di 
+where is_finish=1
+GROUP BY driver_id
+) as t2
+on base.driver_id=t2.driver_order_id
+LEFT JOIN
+(
+    SELECT city_id,city_name,country_name
+    from oride_dw.dim_oride_city 
+)as t3
+on base.city=t3.city_id
+left join
+(select country_name_en
+from oride_dw.dim_oride_country_base
+where country_name_en='Nigeria'
+) t4 on t3.country_name=t4.country_name_en
+left join
+tempone on base.admin_id=tempone.admin_id
+GROUP BY base.dt,t3.city_name,driver_type,know_orider,tempone.aaa,tempone.bbb)
+
+
+
+select temp.dt,temp.city_name,temp.product_id,know_orider,
+zhibiaomingg,zhibiaozhii
+from temp
+lateral view posexplode(split(temp.zhibiaoming,',')) a as zhibiaominggindex,zhibiaomingg
+lateral view posexplode(split(temp.zhibiaozhi,',')) ab as zhibiaozhiiindex,zhibiaozhii
+where zhibiaominggindex=zhibiaozhiiindex
+union all
+select tempp.dt,tempp.city_name,tempp.product_id,know_orider,
+zhibiaomingg,zhibiaozhii
+from tempp
+lateral view posexplode(split(tempp.zhibiaoming,',')) a as zhibiaominggindex,zhibiaomingg
+lateral view posexplode(split(tempp.zhibiaozhi,',')) ab as zhibiaozhiiindex,zhibiaozhii
+where zhibiaominggindex=zhibiaozhiiindex
+union all
+select temppp.dt,temppp.city_name,temppp.product_id,know_orider,
+zhibiaomingg,zhibiaozhii
+from temppp
+lateral view posexplode(split(temppp.zhibiaoming,',')) a as zhibiaominggindex,zhibiaomingg
+lateral view posexplode(split(temppp.zhibiaozhi,',')) ab as zhibiaozhiiindex,zhibiaozhii
+where zhibiaominggindex=zhibiaozhiiindex
+
+
+
+

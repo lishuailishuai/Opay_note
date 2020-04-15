@@ -1,0 +1,1806 @@
+1.null as device_id, --设备ID
+2.from_unixtime(t2.register_time,'yyyy-MM-dd HH:mm:ss') AS register_time,
+       -- 注册时间
+3.任务超时监控中："partition": "country_code=nal/dt={pt}"
+4. set hive.exec.parallel=true;
+    set hive.exec.dynamic.partition.mode=nonstrict;
+
+INSERT overwrite TABLE {db}.{table} partition(country_code,dt)
+select 。。。
+5.hql脚本中：
+       null as device_id, --设备ID
+       t1.country_code,
+       '{pt}' AS dt
+6.'nal' AS country_code --国家码字段
+7.维度表底层是全量，数据有些是重复的，只是dt不一样。
+8.dri.driver_id not in(3835,3963,3970）
+9.
+       (case when dri.know_orider = 13  then 1 else 0 end ) as is_online_share_channel,
+       --司机邀请司机渠道：线上分享
+
+10. case when base_finished_time > 0 or address is not null
+                 then 1
+                 else  0 
+       end as is_sign_up_success, --是否报名成功
+11.1、数据库的每张表只能有一个主键，不可能有多个主键。
+
+2、所谓的一张表多个主键，我们称之为联合主键。
+
+     注：联合主键：就是用多个字段一起作为一张表的主键。
+
+3、主键的主键的作用是保证数据的唯一性和完整性，同时通过主键检索表能够增加检索速度。
+12.ALTER TABLE `data_cancel_control_driver_conf` 
+ADD COLUMN `rule_driver_cancel_not_arrive` text  NOT NULL  COMMENT '司机未到达接驾点计费规则';
+13. select 
+    user_id, mobile
+from (
+    select 
+        user_id, mobile,
+        row_number() over(partition by user_id order by update_time desc) rn
+    from opay_dw_ods.ods_sqoop_base_user_di
+    where dt <= '${pt}'
+) uf where rn = 1
+14.row_number() OVER(partition BY driver_id,status  (业务主键有两个)
+                                   ORDER BY update_time DESC) AS rn1
+          FROM oride_dw_ods.ods_sqoop_mass_rider_signups_df
+          WHERE dt = '{pt}'
+     )t1
+    where rn1=1) dri.            
+15.from_unixtime(veri_time,'yyyy-MM-dd') AS veri_audit_date,--总审核流程审查通过日期
+16.SELECT LOWER('QUADRATICALLY');    quadratically 
+17.airflow中，python脚本中>>不是绝对的依赖关系，只是调度的执行顺序而已
+18.SELECT t.city,
+           t.weather,
+           row_number() over(partition BY t.city
+                             ORDER BY t.counts DESC) row_num  --城市一天的天气状况取一天当中某种天气持续最长时间的
+19.CREATE EXTERNAL TABLE `oride_dw_ods.ods_sqoop_base_data_country_conf_df`(`id` bigint COMMENT '国家 ID'）
+   PARTITIONED BY (`dt` string)
+20.
+21.hue上和python代码中的表，要以python为主，因为hue上有些表是手动导入的，没有经过代码，只是测试用
+22.group by后面不能跟别名
+23.oride_dw.dwd_oride_client_event_detail_hi（分区字段  country_code，dt，hour）按小时增量，还要有hour字段
+24.HQL = '''
+    set hive.exec.parallel=true;
+    set hive.exec.dynamic.partition.mode=nonstrict;
+
+    INSERT OVERWRITE TABLE {db}.{table} partition(country_code,dt)
+    SELECT  order_id 
+           ,user_id 
+           ,replace(concat_ws(',',collect_set(looking_for_a_driver_show_lat)),',','') 
+           ,replace(concat_ws(',',collect_set(looking_for_a_driver_show_lng)),',','') 
+           ,replace(concat_ws(',',collect_set(successful_order_show_lat)),',','') 
+           ,replace(concat_ws(',',collect_set(successful_order_show_lng)),',','') 
+           ,replace(concat_ws(',',collect_set(start_ride_show_lat)),',','') 
+           ,replace(concat_ws(',',collect_set(start_ride_show_lng)),',','') 
+           ,replace(concat_ws(',',collect_set(complete_the_order_show_lat)),',','') 
+           ,replace(concat_ws(',',collect_set(complete_the_order_show_lng)),',','') 
+           ,replace(concat_ws(',',collect_set(rider_arrive_show_lat)),',','') 
+           ,replace(concat_ws(',',collect_set(rider_arrive_show_lng)),',','') 
+           ,'nal'  AS country_code 
+           ,'{pt}' AS dt
+    FROM oride_dw.dwd_oride_passanger_location_event_hi
+    WHERE dt = '{pt}' 
+    GROUP BY  order_id 
+             ,user_id 
+    ;
+
+'''     注意要分组
+25.select collect_set(city_name) from app_oride_city_global_d limit 100
+["All","Lagos","Ibadan","Aba","Kano","Abeokuta","Akure","Ilorin","Enugu"]
+26.create table `opay_dw.aa`(
+`a` int
+)
+location
+ 'ufile://opay-datalake/opay/opay_dw/aa' 
+ 注意引号不一样。
+27.表名不能有-只能有_
+28.null  只能是is null   is not null    不能是=或者!=
+29.CREATE EXTERNAL TABLE `algo_common_event`(
+`event_id` bigint COMMENT 'from deserializer', 
+`ts` bigint COMMENT 'from deserializer', 
+`user_role` int COMMENT 'from deserializer', 
+`city_id` bigint COMMENT 'from deserializer', 
+`trip_id` bigint COMMENT 'from deserializer', 
+`order_id` bigint COMMENT 'from deserializer', 
+`driver_id` bigint COMMENT 'from deserializer', 
+`driver_location` struct<lng:float,lat:float> COMMENT 'from deserializer', 
+`passenger_id` bigint COMMENT 'from deserializer', 
+`extra` string COMMENT 'from deserializer')
+PARTITIONED BY ( 
+`dt` string, 
+`hour` string)
+LOCATION
+'ufile://opay-datalake/oride/oride_dw/algo_common_event';
+
+set hive.exec.parallel=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+INSERT OVERWRITE TABLE oride_dw.algo_common_event partition(dt,hour)
+select event_type as event_id,
+ts,
+user_role,
+city_id,
+trip_id,
+order_id,
+driver_id,
+driver_location,
+passenger_id,
+extra,
+dt,
+hour
+from oride_source.algo_estimate_order_hook
+lateral view outer explode(order_ids) aa as order_id;
+注意：展开的order_ids 类型array<bigint> 其实这个字段都是null,
+展开时，有个坑，会过滤掉，新表会没数据，所以我们要保留null,不进行过滤，加outer
+https://www.jianshu.com/p/77c1f01a9936
+30.
+时间戳。bigint或者int或者string   对应的函数只能使用int
+31.
+建表没有指定主键，但是使用过程中是有业务主键的。
+32.
+string  json { "key" : 520, "key1" : 1314 } get_json_object(xjson,"$.[0].age")
+struct<user_id:string,user_number:string>  {"user_id":"479","user_number":"08169909153"}
+ 
+结构体直接点就可以。
+common.channel,
+            common.subchannel,
+            common.gaid,
+            common.appsflyer_id,
+ e.event_time,
+            e.event_name,
+            e.page,
+            e.source,
+            e.event_value,
+            'nal' as country_code,
+            dt,
+            hour
+        FROM
+            oride_source.server_event LATERAL VIEW EXPLODE(events) es AS e
+  
+  `events` array<struct<event_time:string,event_name:string,page:string,source:string,event_value:string>> COMMENT 'from deserializer')
+   `common` struct<user_id:string,user_number:string,client_timestamp:string,platform:string,os_version:string,app_name:string,app_version:string,locale:string,device_id:string,device_screen:string,device_model:string,device_manufacturer:string,is_root:string,channel:string,subchannel:string,gaid:string,appsflyer_id:string> COMMENT 'from deserializer', 
+json的类型据就是string类型。
+33.
+where date_format(dt,'yyyy-MM')='2019-09';
+34.
+get_json_object(event_value,'$.order_id')
+35.
+订单表的采集时间是前一天00到当天00，最大限度避免订单漂移
+36.
+cast(get_json_object(event_values, '$.driver_id') as bigint) as driver_id,
+from_unixtime(create_time,'yyyy-MM-dd').  create_time必须是bigint/int类型
+37.
+cancel_wait_payment_time,  --乘客取消待支付时间
+null as order_id_multiple, --多单订单
+38.
+split(replace(replace(get_json_object(event_values, '$.driver_ids'),'[',''),']',''), ',') as drivers, 
+39.
+(
+select ,,
+from aa
+lateral view posexplode(drivers) d as dpos, driver_id 
+lateral view posexplode(distances) ds as dspos, dis 
+where dpos = dspos
+) bb
+driver_id可以不写在子查询中，bb依然可以访问。
+40.
+lower(get_json_object(event_values, '$.is_multiple'))='true'
+LOWER(str)
+返回根据当前字符集映射所有字符改变为小写，即返回小写的字符串。
+
+SQL> SELECT LOWER('W3CSCHOOL');
++---------------------------------------------------------+
+| LOWER('W3CSCHOOL')                                  |
++---------------------------------------------------------+
+| w3cschool                                           |
++---------------------------------------------------------+
+1 row in set (0.00 sec) 
+另外还可以参考LCASE()函数，它是把字段的值转换为小写。
+41.
+is_fraud_order     boolean 	是否作弊订单   if (size(tag_ids)>=3 or (array_contains(tag_ids,'T102') and array_contains(tag_ids,'T412')),1,0)
+42.
+INSERT overwrite TABLE {db}.{table} partition (country_code='nal',dt='{pt}')
+在下面的查询语句中就不需要写分区字段了
+43.
+'nal' as country_code,
+'{pt}' as dt
+FROM
+oride_dw_ods.ods_sqoop_base_data_coupon_df
+WHERE
+dt='{pt}'
+44.
+SET hive.exec.parallel=TRUE;
+SET hive.exec.dynamic.partition.mode=nonstrict;
+45.
+group by 后面不能跟别名
+46.
+org.apache.hadoop.hive.ql.metadata.HiveFatalException: [Error 20004]: Fatal error occurred when node tried to create too many dynamic partitions. The maximum number of dynamic partitions is controlled by hive.exec.max.dynamic.partitions and hive.exec.max.dynamic.partitions.pernode. Maximum was set to 100 partitions per node, number of dynamic partitions on this node: 101 at
+org.apache.hadoop.hive.ql.metadata.HiveFatalException:[Error 20004]：节点试图创建太多动态分区时发生致命错误。动态分区的最大数量由Hivi.Exist.Max .Dimix.Actudio和Hivi.Exc.Max .Dimix.Posith.PalNoad控制。最大值设置为每个节点100个分区，这个节点上的动态分区数为101个。
+
+解决：
+https://www.cnblogs.com/charlist/p/7122113.html
+47.
+
+泽哥，建表关联topic数据，我看到数据源目录是下面：.json.gz格式
+s3a://opay-bi/opay_buried/ussd-request/dt=2019-12-10/hour=08/ussd-request_9_0000008991.json.gz
+创建表要求是用orc，然后建表location指定上面的存储位置是读不出数据的，如果不指定数据存储格式，不压缩是可以读出来的
+建表必须要orc压缩格式吗？如果用orc,那我还需要建临时中间表，导一下数据。
+
+埋点的日志都是json 的
+埋点不创建orc
+
+
+CREATE EXTERNAL TABLE ussd_request
+(
+network string,
+phone string,
+service string,
+sessionId string,
+text string,
+time string,
+rip string
+)
+PARTITIONED BY ( 
+`dt` string, 
+`hour` string)
+ROW FORMAT SERDE                                   
+   'org.openx.data.jsonserde.JsonSerDe'             
+ WITH SERDEPROPERTIES (                             
+   'ignore.malformed.json'='true')                  
+ STORED AS INPUTFORMAT                              
+   'org.apache.hadoop.mapred.TextInputFormat'       
+ OUTPUTFORMAT                                       
+   'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat' 
+LOCATION
+  's3a://opay-bi/opay_buried/ussd-request';
+
+
+  CREATE EXTERNAL TABLE `oride_passenger_finish_info`(
+  `phone_number` bigint COMMENT 'from deserializer', 
+  `city_id` bigint COMMENT 'from deserializer', 
+  `last_order_city_id` bigint COMMENT 'from deserializer', 
+  `first_create_time` bigint COMMENT 'from deserializer', 
+  `last_create_time` bigint COMMENT 'from deserializer', 
+  `first_finish_time` bigint COMMENT 'from deserializer', 
+  `last_finish_time` bigint COMMENT 'from deserializer', 
+  `total_create_num` bigint COMMENT 'from deserializer', 
+  `total_finish_num` bigint COMMENT 'from deserializer', 
+  `total_price` bigint COMMENT 'from deserializer', 
+  `avg_will_pay` float COMMENT 'from deserializer', 
+  `last_finish_day` bigint COMMENT 'from deserializer', 
+  `finish_frequency` float COMMENT 'from deserializer', 
+  `create_frequency` float COMMENT 'from deserializer', 
+  `oride_finish_num` bigint COMMENT 'from deserializer', 
+  `otrike_carpool_finish_num` bigint COMMENT 'from deserializer', 
+  `otrike_charter_finish_num` bigint COMMENT 'from deserializer', 
+  `ocar_finish_num` bigint COMMENT 'from deserializer')
+PARTITIONED BY ( 
+  `dt` string)
+ROW FORMAT SERDE 
+  'org.openx.data.jsonserde.JsonSerDe' 
+STORED AS INPUTFORMAT 
+  'org.apache.hadoop.mapred.TextInputFormat' 
+OUTPUTFORMAT 
+  'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION
+  'ufile://opay-datalake/oride-research/total_passenger_finish_info/oride'
+
+48. 建表语句：
+beeline -u "jdbc:hive2://10.52.17.84:10000" -n airflow -e "
+  CREATE  TABLE test_db.dwd_oride_finance_driver_repayment_extend_df_new(  
+    city_id bigint COMMENT '司机ID',
+    
+     actual_repayment  decimal(10,2)  comment '实际还款金额',
+    conversion_overdue_days decimal(10,2) comment '换算逾期天数')  
+  COMMENT '财务主题司机还款扩展表'  
+  PARTITIONED BY (   
+    country_code string COMMENT '二位国家码',
+    dt string COMMENT '分区时间')
+  STORED AS orc  
+  LOCATION  
+      'hdfs://warehourse/user/hive/warehouse/test_db.db/      dwd_oride_finance_driver_repayment_extend_df'
+  TBLPROPERTIES (  
+    'orc.compress'='SNAPPY'
+    );
+  “
+ 49.
+ 不好意思打扰一下，麻烦先上数据库加个字段
+
+ALTER TABLE `data_order_payment_history`
+    ADD COLUMN `surcharge` DECIMAL(10, 2) NOT NULL DEFAULT 0 COMMENT '服务费';
+50.
+ALTER TABLE `data_driver_extend` 
+  ADD COLUMN `fee_free` tinyint(2) unsigned NOT NULL DEFAULT '0' COMMENT '免佣金（0:不免佣金 1:免佣金）';
+51.
+当前CDH 环境 建表语句，可以参考以下方法
+建表语句：
+beeline -u "jdbc:hive2://10.52.17.84:10000" -n airflow -e "建表语句"
+Alter语句：
+beeline -u "jdbc:hive2://10.52.17.84:10000" -n airflow -e "alter table"
+脚本依赖配置
+https://confluence.opayride.com/pages/viewpage.action?pageId=18194092
+52.
+CDH 环境 建表语句，可以参考以下方法
+建表语句：
+beeline -u "jdbc:hive2://10.52.17.84:10000" -n airflow -e "建表语句"
+Alter语句：
+beeline -u "jdbc:hive2://10.52.17.84:10000" -n airflow -e "alter table"
+阿里 环境 建表语句，可以参考以下方法
+beeline -u "jdbc:hive2://10.52.5.190:10000/default" -n airflow
+脚本依赖配置
+https://confluence.opayride.com/pages/viewpage.action?pageId=18194092
+53.
+
+##----------------------------------------- 依赖 ---------------------------------------##
+
+
+# 依赖前一小时分区
+dwd_oride_driver_location_event_hi_prev_day_task = UFileSensor(
+    task_id='dwd_oride_driver_location_event_hi_prev_day_task',
+    filepath='{hdfs_path_str}/country_code=nal/dt={pt}/hour={hour}/_SUCCESS'.format(
+        hdfs_path_str="oride/oride_dw/dwd_oride_driver_location_event_hi",
+        pt='{{ds}}',
+        hour='23'
+    ),
+    bucket_name='opay-datalake',
+    poke_interval=60,  # 依赖不满足时，一分钟检查一次依赖状态
+    dag=dag
+)
+
+
+##----------------------------------------- 依赖 ---------------------------------------##
+
+
+# 依赖前一小时分区
+client_event_prev_hour_task = HivePartitionSensor(
+    task_id="client_event_prev_hour_task",
+    table="client_event",
+    partition="""dt='{{ ds }}' and hour='{{ execution_date.strftime("%H") }}'""",
+    schema="oride_source",
+    poke_interval=60,  # 依赖不满足时，一分钟检查一次依赖状态
+    dag=dag
+)
+---------------------------
+
+dependence_dwd_oride_order_push_driver_detail_di_prev_day_task = UFileSensor(
+    task_id='dwd_oride_order_push_driver_detail_di_prev_day_task',
+    filepath='{hdfs_path_str}/dt={pt}/_SUCCESS'.format(
+        hdfs_path_str="oride/oride_dw/dwd_oride_order_push_driver_detail_di/country_code=nal",
+        pt='{{ds}}'
+    ),
+    bucket_name='opay-datalake',
+    poke_interval=60,  # 依赖不满足时，一分钟检查一次依赖状态
+    dag=dag
+)
+
+# 依赖前一天分区
+dependence_oride_driver_timerange_prev_day_task = HivePartitionSensor(
+    task_id="oride_driver_timerange_prev_day_task",
+    table="ods_log_oride_driver_timerange",
+    partition="dt='{{ds}}'",
+    schema="oride_dw_ods",
+    poke_interval=60,  # 依赖不满足时，一分钟检查一次依赖状态
+    dag=dag
+)
+----
+##----------------------------------------- 依赖 ---------------------------------------##
+
+dwd_oride_rider_signups_df_task = UFileSensor(
+    task_id='dwd_oride_rider_signups_df_task',
+    filepath='{hdfs_path_str}/country_code=nal/dt={pt}/_SUCCESS'.format(
+        hdfs_path_str="oride/oride_dw/dwd_oride_rider_signups_df",
+        pt='{{ds}}'
+    ),
+    bucket_name='opay-datalake',
+    poke_interval=60,
+    dag=dag
+)
+
+dim_oride_city_task = HivePartitionSensor(//这里还有一个countrycode分区，只写dt是因为唯一    airflow检查有没有数据
+    task_id="dim_oride_city_task",
+    table="dim_oride_city",
+    partition="dt='{{ds}}'",
+    schema="oride_dw",
+    poke_interval=60,  # 依赖不满足时，一分钟检查一次依赖状态
+    dag=dag
+)
+
+
+54.
+CREATE EXTERNAL TABLE `dwd_order_base_hi`(
+
+`order_id` bigint comment '订单ID',
+
+`city_id` bigint comment '城市ID',
+
+`product_id` bigint comment '产品线ID' ）
+
+comment '表名称'
+
+PARTITIONED BY (
+
+country_code string comment '国家码',
+
+dt string comment '日期分区',
+
+hour string comment '小时'
+
+)
+
+STORED AS orc
+
+TBLPROPERTIES ("orc.compress"="SNAPPY")
+
+LOCATION
+
+'ufile://opay-datalake/oride/dim_city_base';
+
+
+55.
+merchant_type,
+                             CASE countries_code
+                                 WHEN 'NG' THEN 'NG'
+                                 WHEN 'NO' THEN 'NO'
+                                 WHEN 'GH' THEN 'GH'
+                                 WHEN 'BW' THEN 'BW'
+                                 WHEN 'GH' THEN 'GH'
+                                 WHEN 'KE' THEN 'KE'
+                                 WHEN 'MW' THEN 'MW'
+                                 WHEN 'MZ' THEN 'MZ'
+                                 WHEN 'PL' THEN 'PL'
+                                 WHEN 'ZA' THEN 'ZA'
+                                 WHEN 'SE' THEN 'SE'
+                                 WHEN 'TZ' THEN 'TZ'
+                                 WHEN 'UG' THEN 'UG'
+                                 WHEN 'US' THEN 'US'
+                                 WHEN 'ZM' THEN 'ZM'
+                                 WHEN 'ZW' THEN 'ZW'
+                                 ELSE 'NG'
+                             END AS country_code
+
+FROM
+         (SELECT user_id,
+                 business_name,
+                 ROLE,
+                 kyc_level,
+                 '' category,
+                    row_number()over(partition BY user_id
+                                     ORDER BY update_time DESC) rn,
+                                country
+          FROM opay_dw_ods.ods_sqoop_base_user_di where create_time<'{pt} 23:00:00') m
+
+56.
+select from_unixtime(1576913076)  2019-12-21 08:24:36
+select unix_timestamp('2019-12-21')  NULL
+select unix_timestamp('2019-12-21 08:24:36') 1576913076
+57.
+select date_format('2019-09-18','yyyy-MM-dd 23') 2019-09-18 23
+58.
+select 
+nvl(sub_service_type, 'ALL') as sub_service_type, 
+nvl(recharge_service_provider, 'ALL') as recharge_service_provider, 
+nvl(originator_role, 'ALL') as originator_role, 
+nvl(order_status, 'ALL') as order_status, 
+sum(amount) order_amt, count(*) order_cnt,
+nvl(country_code, 'ALL') as country_code, 
+'${pt}'
+from (
+select 
+country_code, sub_service_type, recharge_service_provider, originator_role, order_status, order_no,  
+amount
+from dwd_opay_life_payment_record_di
+where dt = '{$pt}' 
+and create_time BETWEEN date_format(date_sub('{$pt}', 1), 'yyyy-MM-dd 23') AND date_format('{$pt}', 'yyyy-MM-dd 23')
+and recharge_service_provider != '' and recharge_service_provider != 'supabet' and recharge_service_provider is not null
+) t1
+group by country_code, sub_service_type, recharge_service_provider, originator_role, order_status
+    
+
+上面可以，下面不可以
+select dt as ss from dm_opay_life_payment_originator_base_cube_d group by ss
+
+
+59.
+HQL='''
+    set hive.exec.dynamic.partition.mode=nonstrict;
+    set hive.exec.parallel=true; --default false
+
+    insert overwrite table {db}.{table} partition(country_code, dt)
+    select 
+        nvl(recharge_service_provider, 'ALL') as service_provider, 
+        nvl(amount_range, 'ALL') as amount_range, 
+        nvl(order_status, 'ALL') as order_status, 
+        count(distinct originator_id) user_cnt, sum(amount) amt, count(*) cnt,
+        country_code,
+        '{pt}' dt
+    from (
+        select order_no, order_status, originator_id, amount, recharge_service_provider, country_code,
+        case
+            when amount > 200000 then '(2000, more)'
+            when amount > 100000 then '(1000, 2000]'
+            when amount > 50000 then '(500, 1000]'
+            when amount > 30000 then '(300, 500]'
+            when amount > 20000 then '(200, 300]'
+            when amount > 10000 then '(100, 200]'
+            else '[0, 100]'
+        end as amount_range
+        from {db}.dwd_opay_life_payment_record_di
+        where dt = '{pt}'
+            and create_time BETWEEN date_format(date_sub('{pt}', 1), 'yyyy-MM-dd 23') AND date_format('{pt}', 'yyyy-MM-dd 23') 
+            and sub_service_type = 'Betting'
+            and recharge_service_provider <> '' and recharge_service_provider <> 'supabet' and recharge_service_provider is not null
+    ) t1
+    group by country_code, recharge_service_provider, amount_range, order_status
+    GROUPING SETS (
+        (country_code, recharge_service_provider, amount_range, order_status), 
+        (country_code, recharge_service_provider, amount_range), 
+        (country_code, recharge_service_provider, order_status),
+        (country_code, recharge_service_provider, order_status),
+        (country_code, recharge_service_provider), 
+        (country_code, amount_range), 
+        (country_code, order_status), 
+        (country_code)
+    )
+
+    '''.format(
+        pt=ds,
+        table=table_name,
+        db=db_name
+    )
+    return HQL
+60.
+df -h
+61.
+CREATE EXTERNAL TABLE oride_dw.dwd_oride_anti_fraud_log_di_bak(
+`action` string COMMENT '行为', 
+`userid` bigint COMMENT '用户id', 
+`deviceid` string COMMENT '设备id', 
+`inviterrole` int COMMENT '邀请人类型', 
+`inviterid` bigint COMMENT '邀请人id', 
+`isblacklisted` boolean COMMENT '是否在黑名单', 
+`isvirtualdevice` boolean COMMENT '是否是虚拟设备', 
+`driver_id` bigint COMMENT '司机id', 
+`isroot` boolean COMMENT '是否root', 
+`isvirtual` boolean COMMENT '是否为虚拟设备', 
+`taketime` bigint COMMENT '接单时间', 
+`waittime` bigint COMMENT '到达接送点时间', 
+`pickuptime` bigint COMMENT '接到乘客时间', 
+`arrivetime` bigint COMMENT '到达终点时间', 
+`canceltime` bigint COMMENT '订单取消时间', 
+`cancelreason` string COMMENT '订单取消原因', 
+`createtime` bigint COMMENT '创建时间', 
+`silencefrom` bigint COMMENT '静默开始时间', 
+`silenceto` bigint COMMENT '静默结束时间', 
+`behaviors` string COMMENT '行为id', 
+`behavior` int COMMENT '行为id', 
+`silenttime` bigint COMMENT '静默时间', 
+`waitlat` double COMMENT '到达接送点纬度', 
+`waitlng` double COMMENT '到达接送点经度', 
+`arrivelat` double COMMENT '到达终点纬度', 
+`arrivelng` double COMMENT '到达终点经度', 
+`distance1` double COMMENT '司机等待乘客的位置与出发地', 
+`distance2` double COMMENT '到达地和目的地的距离', 
+`userdeviceid` string COMMENT '用户设备id', 
+`issilent` boolean COMMENT '是否静默', 
+`reason` int COMMENT '订单取消原因', 
+`couponid` bigint COMMENT '优惠类型', 
+`order_id` bigint COMMENT '订单id', 
+`abnormalstrategy` string COMMENT '命中策略id')
+COMMENT 'oride反作弊日志表'
+PARTITIONED BY ( 
+`country_code` string COMMENT '二位国家码', 
+`dt` string COMMENT '分区时间')
+STORED AS orc 
+LOCATION "oss://opay-datalake/oride/oride_dw/dwd_oride_anti_fraud_log_di_bak"
+TBLPROPERTIES ('orc.compress'='SNAPPY');
+
+
+1 CREATE EXTERNAL TABLE `oride_dw.dwm_oride_passenger_act_m`(
+2   `passenger_id` int COMMENT '乘客ID', 
+3   `city_id` int COMMENT '城市ID', 
+4   `product_id` int COMMENT '业务线', 
+5   `month` int COMMENT '第几月')
+6 COMMENT '活跃乘客月表'
+7 PARTITIONED BY ( 
+8   `country_code` string, 
+9   `dt` string)
+10  ROW FORMAT SERDE 
+11    'org.apache.hadoop.hive.ql.io.orc.OrcSerde' 
+12  STORED AS INPUTFORMAT 
+13    'org.apache.hadoop.hive.ql.io.orc.OrcInputFormat' 
+14  OUTPUTFORMAT 
+15    'org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat'
+16  LOCATION
+17    'ufile://opay-datalake/oride/oride_dw/dwm_oride_passenger_act_m'
+18  TBLPROPERTIES (
+19    'orc.compress'='SNAPPY', 
+20    'transient_lastDdlTime'='1576232164')
+
+62.
+zip -r a.zip aa
+unzip a.zip
+63.
+MSCK REPAIR TABLE client_event
+https://www.jianshu.com/p/c1b0dc86f9b0
+https://www.jianshu.com/p/aac8c58cd9a2
+64.
+hadoop fs -put cc/* oss://opay-datalake/oride_bi/
+65.
+beeline -u "jdbc:hive2://10.52.5.190:10000" -n airflow
+
+ beeline -u "jdbc:hive2://10.52.5.190:10000" -n airflow  -e “……..”
+
+ beeline -u "jdbc:hive2://10.52.5.190:10000" -n airflow -f aa.hql 
+66.
+show partitions tablename   查看分区，因为是按天采集，所以分区是有顺序的，从小到大
+67.
+ hadoop fs -ls oss://opay-datalake/
+ hadoop fs -rm -r -f oss://opay-datalake/*B*
+ hadoop fs -mkdir  oss://opay-datalake/okash_dw
+  hadoop fs -get ufile://okash/okash/okash/client ./      下载的就是client    操作的是文件夹本身
+  hadoop fs -get ufile://okash/okash/okash/client ./aa    下载的就是client  重命名
+  hadoop fs -get ufile://okash/okash/okash/client/* ./nn    报错，没有nn目录
+68。
+表名只能有_不能有——
+69.
+du -f 查看所有文件及文件夹的大小。  后面不加东西   在查看文件的目录中使用
+free -m 查看内存使用
+
+70.
+建表语句 orc与snappy.    parquet就只是parquet了。     json
+71.
+hadoop fs -get ufile://okash/okash/okash/client/*2019-08* ./ods_log_client_hi/
+72.
+(1)、所有数据表都使用外部表(EXTERNAL )，建表语句如下
+
+CREATE EXTERNAL TABLE `dwd_order_base_hi`(
+
+`order_id` bigint comment '订单ID',
+
+`city_id` bigint comment '城市ID',
+
+`product_id` bigint comment '产品线ID' ）
+
+comment '表名称'
+
+PARTITIONED BY (
+
+country_code string comment '国家码',
+
+dt string comment '日期分区',
+
+hour string comment '小时'
+
+)
+
+STORED AS orc
+
+TBLPROPERTIES ("orc.compress"="SNAPPY")
+
+LOCATION
+
+'ufile://opay-datalake/oride/dim_city_base';
+
+
+
+(2)、描述表的作用
+
+comment '表名称'
+
+
+
+(3)、存储类型规范
+
+默认存储类型为STORED AS orc
+
+埋点相关存储类型为STORED AS parquet
+
+
+
+(4)、使用外部表进行存储
+
+LOCATION 'ufile://opay-datalake/oride/'
+
+
+
+(5)、字段comment
+
+必须标明每个字段的描述
+
+
+
+(6)、压缩
+
+TBLPROPERTIES ("orc.compress"="SNAPPY")
+
+
+
+
+
+5.6 确定数据类型
+
+数仓数据类型
+
+关系型数据库数据类型
+
+备注
+
+bigint
+
+int,bigint
+
+
+string
+
+varchar,date,timestamp
+
+
+double
+
+double
+
+
+
+
+
+5.7 表类型命名&描述
+
+业务线名称参考4.7 业务名称缩写
+
+计算周期类型后缀
+
+计算周期后缀说明
+
+备注
+
+hi
+
+小时级增量
+
+dwd_order_base_hi
+
+hf
+
+小时级全量
+
+dwd_order_base_hf
+
+hd
+
+小时级处理近23小时的数据
+
+
+di
+
+天级增量
+
+
+df
+
+天级全量
+
+
+his
+
+历史累计
+
+
+ODS 命名规范：
+
+三种 采集方式 (binlog、log、sqoop):
+
+
+
+binlog：mysql binlog 采集
+log：日志采集
+sqoop：sqoop 采集
+
+73.
+https://jingyan.baidu.com/article/ca2d939d7867e0eb6c31ce80.html
+du -h –max-depth=1 *
+
+https://www.cnblogs.com/renmengkai/p/9452883.html
+du -h 路径
+74.
+1 CREATE EXTERNAL TABLE `ods_sqoop_base_merchant_remittance_limit_df_bak`(
+2   `id` bigint COMMENT '主键', 
+3   `version` bigint COMMENT '版本号', 
+4   `merchant_id` string COMMENT '商户id', 
+5   `remittance_disable_name_check` string COMMENT '是否禁用汇款名称校验：Y/N', 
+6   `remittance_allowed_currencies` string COMMENT '汇款配置限制币种', 
+7   `remittance_claim_duration` bigint COMMENT '汇款配置限制时长', 
+8   `create_time` string COMMENT '创建时间', 
+9   `update_time` string COMMENT '更新时间')
+10  PARTITIONED BY ( 
+11    `dt` string)
+12  ROW FORMAT SERDE 
+13    'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' 
+14  STORED AS INPUTFORMAT 
+15    'org.apache.hadoop.mapred.TextInputFormat' 
+16  OUTPUTFORMAT 
+17    'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+18  LOCATION
+19    'ufile://opay-datalake/opay_dw_ods/opay_merchant/merchant_remittance_limit'
+20  TBLPROPERTIES (
+21    'last_modified_by'='airflow', 
+22    'last_modified_time'='1576140538', 
+23    'transient_lastDdlTime'='1576140538')
+
+注意压缩格式
+
+75.
+drop database cascade
+76
+hadoop fs -put ./*2019-08* oss://opay-datalake/okash_dw/ods_log_client_hi/
+77.
+ zip -r pone.zip ./passenger_finish_info/*2019-10*
+ 解压出来的是passenger_finish_info
+78.
+du -sh *
+79.
+df -h 查看磁盘使用情况吧
+80.
+free -g 查看内存
+https://www.cnblogs.com/hanmk/p/10556989.html
+81.
+ufile/hdfs<------s3a------->阿里
+迁移数据时
+82.
+CREATE EXTERNAL TABLE `ods_log_client_hi`(
+`common` struct<user_id:string,is_newuser:string,user_number:string,client_timestamp:string,platform:string,os_version:string,app_name:string,app_version:string,locale:string,device_id:string,device_screen:string,device_model:string,device_manufacturer:string,is_root:string,channel:string,subchannel:string,gaid:string,appsflyer_id:string,longtitude:string,latitude:string> COMMENT 'from deserializer', 
+`events` array<struct<event_time:string,event_name:string,page:string,event_value:string>> COMMENT 'from deserializer')
+PARTITIONED BY ( 
+`dt` string, 
+`hour` string)
+ROW FORMAT SERDE 
+'org.openx.data.jsonserde.JsonSerDe'    //底层是.log.gz 同样可以查到，因为也是json内容
+WITH SERDEPROPERTIES ( 
+'ignore.malformed.json'='true') 
+STORED AS INPUTFORMAT 
+'org.apache.hadoop.mapred.TextInputFormat' 
+OUTPUTFORMAT 
+'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION
+'oss://opay-datalake/okash_dw/ods_log_client_hi';
+MSCK REPAIR TABLE ods_log_client_hi;
+83.
+分区表查询时要限定分区，这样查询会更快。
+84.
+hadoop fs -mv oss://opay-datalake/ofood_dw/ofood_dwd_ofood_shop_extend_location_df oss://opay-datalake/ofood_dw/dwd_ofood_shop_extend_location_df
+85.
+DAG
+   task_timeout_monitor       先执行超时再执行app? 
+   app_....
+      dwd_...
+      ods_....
+86.
+airflow一次最多跑32个task，也就是32天的数据
+回溯本质上是回填历史数据，和恢复丢失数据没有关系
+87.
+3.提交代码后，在cdh上git pull和jsgit后，
+同时也要在阿里侧执行sudo su - airflow
+sh script/git_pull.sh
+4.优先迁移dwd层，源头表为ods有数据的
+5.阿里对应airflow地址：http://8.208.14.165:8080/admin/airflow/tree?dag_id=dim_oride_city
+
+阿里侧airflow测试：   测试。回溯  要使用的airflow命令
+sudo su - airflow
+. /home/airflow/venv/bin/activate
+89.
+beeline -u "jdbc:hive2://10.52.5.190:10000" -n airflow
+
+ beeline -u "jdbc:hive2://10.52.5.190:10000" -n airflow  -e “……..”
+
+ beeline -u "jdbc:hive2://10.52.5.190:10000" -n airflow -f aa.hql 
+
+
+阿里的回溯
+sudo su - airflow         测试。回溯  要使用的airflow命令
+. /home/airflow/venv/bin/activate
+
+
+90.
+airflow backfill -x --rerun_failed_tasks -s 2019-12-01 -e 2019-12-25 app_opay_user_report_sum_d
+下面的上线测试之后，就会有8 号的数据了。
+airflow test dwd_oride_h5_event_detail_hi dwd_oride_h5_event_detail_hi_task 2019-12-08 -sd 
+airflow test dwd_oride_h5_event_detail_hi h5_event_prev_hour_task 2019-12-08 -sd 
+
+
+91.
+提交代码之后，部署在cdh
+airflow线上测试
+sudo -i
+cd /root/airflow/dags
+git pull
+sh /root/deploy_git_airflow.sh
+
+
+
+92.
+Git add file
+Git commit -m “shuoming”
+Git status
+
+Git checkout — file    chexiaoxiugai
+
+
+
+
+Git remote add origin dz
+Git push -u origin master
+Git clone dz 
+
+
+Git add 
+Git commit -m “”
+Git push  origin master
+
+
+git clone/init 不需要在git管理的仓库中进行
+
+https://blog.csdn.net/u014788838/article/details/87926151
+
+
+git fetch --all && git reset --hard origin/master && git pull
+Fetching origin
+Git pull 强制覆盖本地代码
+Head 表示最新版本
+如果提示git命令命令找不到，手打上去，不要复制粘贴
+
+
+我自己修改，远程上如果别人没有操作，我可以直接add   commit push
+                     因为按道理要防止冲突，先pull ,别人的修改和你的修改都会拉下来，你再自己合并修改
+                     再add. Commit  push.    这里的首先pull 显示already
+
+
+两个人修改的不是同一个文件，我本地修改，别人已经push，那么我是push不上去的，我先要进行pull
+因为操作的是不同文件，所以会进行合并，然后，我们不需要手动修改合并什么，直接add commit push 即可
+而且，add的只是自己的文件，别人的文件在我们pull的时候就已经覆盖了我们本地上的了。
+而且，第一次pull的时候，因为别人的修改已经同步到你的本地文件中，所以会显示别人的修改记录。
+
+
+
+你本地修改，别人已经修改push,你首先要pull,别人的修改会同步到你的本地文件，然后你再进行add commit push.  所以要保证你在本地所做的修改是对的。
+
+要知道，最终push的只是你创建的文件，其他远程库上保持不变，先pull只是为了解决冲突而已。
+
+93.
+cdh的回溯命令   测试。回溯  要使用的airflow命令
+sudo -i
+. /data/venv/bin/activate
+
+94.
+#！/bin/bash
+hive -e "
+use oride_bi;
+CREATE TABLE ，，，
+
+
+95.
+select date_format(e.create_time,'yyyy-MM-dd'),hour(e.create_time) as aa,count(*)
+from
+dwd_opay_account_balance_df e where create_time!=null
+group by date_format(e.create_time,'yyyy-MM-dd'),hour(e.create_time)
+limit 10;
+
+where aa.dt!=null
+
+where dt='2019-08-21'
+
+96.
+ods层(还有dwd)的采集，表通常会有创建时间和更新时间
+
+之后层的表，通常就没有这两个时间了。
+
+97.
+表2: 用户与设备的绑定关系表（opay_user_device）。包含字段：user_id（用户ID），mobile（用户手机号），device_id（用户最后一次使用的设备号，若与上次不同，则覆盖上条记录），timestamp（用户最后一次使用该设备的时间，打点能获取的最新的时间）；
+
+需求：按照 user_id、device_id 分组  找出 timestamp  最后一次时间，
+set mapred.max.split.size=1000000;
+    set hive.exec.dynamic.partition.mode=nonstrict;
+    set hive.exec.parallel=true;
+    insert overwrite table {db}.{table} partition(country_code,dt)
+    select 
+    user_id,
+    device_id,
+    mobile,
+    server_timestamp,
+    'nal' as country_code,
+    '{pt}' as dt 
+from
+    (select
+        user_id,
+        mobile,
+        device_id,
+        server_timestamp,
+        row_number()
+        over(partition by user_id,device_id order by server_timestamp desc) as num ---里面不能用别名
+    from opay_dw.dwd_opay_client_event_base_di
+    where dt='{pt}'
+    ) aa 
+where aa.num=1;
+
+
+CREATE EXTERNAL TABLE `app_opay_user_device_d`(
+user_id string COMMENT '用户ID',
+device_id string COMMENT '用户最后一次使用的设备号', 
+mobile string COMMENT '用户手机号',
+`timestamp` int COMMENT '用户最后一次使用该设备的时间')
+COMMENT '用户与设备的绑定关系表'
+PARTITIONED BY ( 
+country_code string,
+`dt` string COMMENT '分区时间')
+stored as orc
+LOCATION
+'oss://opay-datalake/opay/opay_dw/app_opay_user_device_d'
+TBLPROPERTIES ("orc.compress"="SNAPPY") --必须放在最后
+
+98.
+hive中，null 和‘’  不一样
+99.
+select
+count(distinct order_no),sum(actual_pay_amount)
+from  ods_binlog_base_betting_topup_record_hi 
+where concat_ws(' ',dt,hour) BETWEEN '2019-12-28 23' AND '2019-12-29 23'
+and order_status='SUCCESS'
+
+或者
+
+select
+count(distinct order_no),sum(actual_pay_amount)
+from  ods_binlog_base_betting_topup_record_hi 
+where (dt='2019-12-28' and hour=23) or (dt='2019-12-29' and hour<23)
+and order_status='SUCCESS'
+100.
+ alter table app_opay_user_device_d drop partition(dt='2019-12-31');
+ 真正的分区以及数据还是在阿里上存的了
+101.
+##----------------------------------------- 依赖 ---------------------------------------##
+
+# 依赖前一天分区
+dwd_opay_client_event_base_di_task = OssSensor(
+    task_id='dwd_opay_client_event_base_di_task',
+    bucket_key='{hdfs_path_str}/dt={pt}/_SUCCESS'.format(
+        hdfs_path_str="opay/opay_dw/dwd_opay_client_event_base_di/country_code=nal",
+        pt='{{ds}}'
+    ),
+    bucket_name='opay-datalake',
+    poke_interval=60,  # 依赖不满足时，一分钟检查一次依赖状态
+    dag=dag
+)
+
+app_opay_user_device_d_prev_day_task = OssSensor(
+    task_id='app_opay_user_device_d_prev_day_task',
+    bucket_key='{hdfs_path_str}/dt={pt}/_SUCCESS'.format(
+        hdfs_path_str="opay/opay_dw/app_opay_user_device_d/country_code=nal",
+        pt='{{macros.ds_add(ds, -1)}}'
+    ),
+    bucket_name='opay-datalake',
+    poke_interval=60,  # 依赖不满足时，一分钟检查一次依赖状态
+    dag=dag
+)
+
+
+1
+insert overwrite table app_opay_device_d partition(country_code,dt)
+select if(a.device_id is null,b.device_id,a.device_id),
+if(b.device_id is not null,b.bb,a.aa),
+'nal' as country_code,
+'${pt}' as dt
+from (
+select  device_id,
+        max(server_timestamp) aa
+    from opay_dw.dwd_opay_client_event_base_di
+    where dt<'${pt}' and device_id!=''
+    group by device_id
+    ) a
+full join
+(select
+        device_id,
+        max(server_timestamp) bb
+    from opay_dw.dwd_opay_client_event_base_di
+    where dt='${pt}' and device_id!=''
+    group by device_id
+) b
+on a.device_id=b.device_id;
+
+
+
+set mapred.max.split.size=1000000;
+    set hive.exec.dynamic.partition.mode=nonstrict;
+    set hive.exec.parallel=true;
+    insert overwrite table {db}.{table} partition(country_code,dt)
+    select if(a.device_id is null,b.device_id,a.device_id),
+    if(b.device_id is not null,b.bb,a.`timestamp`),
+    'nal' as country_code,
+    '{pt}' as dt
+    from 
+    (select *
+     from
+    opay_dw.app_opay_device_d 
+    where dt=date_sub('{pt}',1)
+    ) a
+    full join
+    (select
+        device_id,
+        max(server_timestamp) bb
+    from opay_dw.dwd_opay_client_event_base_di
+    where dt='{pt}' and device_id!=''
+    group by device_id
+    ) b
+on a.device_id=b.device_id;
+
+
+
+
+2
+----------------------------------------------------
+insert overwrite table app_opay_user_device_d partition(country_code,dt)
+select 
+if(a.user_id is null,b.user_id,a.user_id),
+if(a.device_id is null,b.device_id,a.device_id),
+if(a.mobile is null,b.mobile,a.mobile),
+if(b.device_id is not null,b.bb,a.aa),
+'nal' as country_code,
+'${pt}' as dt
+from (
+select  
+        user_id,
+        device_id,
+        mobile,
+        max(server_timestamp) aa
+    from opay_dw.dwd_opay_client_event_base_di
+    where dt<'${pt}' and device_id!=''
+    group by user_id,device_id,mobile
+    ) a
+full join
+(select
+        user_id,
+        device_id,
+        mobile,
+        max(server_timestamp) bb
+    from opay_dw.dwd_opay_client_event_base_di
+    where dt='${pt}' and device_id!=''
+    group by user_id,device_id,mobile
+) b
+on a.device_id=b.device_id;
+
+
+set mapred.max.split.size=1000000;
+    set hive.exec.dynamic.partition.mode=nonstrict;
+    set hive.exec.parallel=true;
+    insert overwrite table {db}.{table} partition(country_code,dt)
+    select 
+    if(a.user_id is null,b.user_id,a.user_id),
+    if(a.device_id is null,b.device_id,a.device_id),
+    if(a.mobile is null,b.mobile,a.mobile),
+    if(b.device_id is not null,b.bb,a.`timestamp`),
+    'nal' as country_code,
+    '{pt}' as dt
+    from 
+    (select * from 
+    opay_dw.app_opay_user_device_d 
+    where dt=date_sub('{pt}',1)
+    ) a
+    full join
+    (select
+        user_id,
+        device_id,
+        mobile,
+        max(server_timestamp) bb
+    from opay_dw.dwd_opay_client_event_base_di
+    where dt='{pt}' and device_id!=''
+    group by user_id,device_id,mobile
+    ) b
+    on a.device_id=b.device_id;
+    
+102.
+insert overwrite table app_opay_device_d partition(country_code,dt)
+select if(a.device_id is null,b.device_id,a.device_id),
+if(b.device_id is not null,b.bb,a.aa),
+'nal' as country_code,
+'${pt}' as dt
+from (
+select  common.device_id device_id,
+        max(`timestamp`) aa
+    from opay_source.client_event
+    where dt<date_sub('${pt}', 1) or (dt=date_sub('${pt}', 1) and hour < 23) and common.device_id!=''
+    group by common.device_id
+    ) a
+full join
+(select
+        common.device_id device_id,
+        max(`timestamp`) bb
+    from opay_source.client_event
+    where (dt = '${pt}' and hour < 23) or (dt=date_sub('${pt}', 1) and hour = 23) and common.device_id!=''
+    group by common.device_id
+) b
+on a.device_id=b.device_id;
+
+==================
+where (dt = '{pt}' and hour < 23) or (dt=date_sub('{pt}', 1) and hour = 23)
+
+where concat_ws(' ',dt,hour) BETWEEN ''date_sub('{pt}',1)' 23' AND ''{pt}' 23'
+===================
+
+set mapred.max.split.size=1000000;
+    set hive.exec.dynamic.partition.mode=nonstrict;
+    set hive.exec.parallel=true;
+    insert overwrite table {db}.{table} partition(country_code,dt)
+    select if(a.device_id is null,b.device_id,a.device_id),
+    if(b.device_id is not null,b.bb,a.`timestamp`),
+    'nal' as country_code,
+    '{pt}' as dt
+    from 
+    (select *
+     from
+    opay_dw.app_opay_device_d 
+    where dt=date_sub('{pt}',1)
+    ) a
+    full join
+    (select
+        common.device_id device_id,
+        max(`timestamp`) bb
+    from opay_source.client_event
+    where (dt = '{pt}' and hour < 23) or (dt=date_sub('{pt}', 1) and hour = 23) and common.device_id!=''
+    group by common.device_id
+    ) b
+on a.device_id=b.device_id;
+
+
+
+
+2 
+----------------------------------------------------
+insert overwrite table app_opay_user_device_d partition(country_code,dt)
+select 
+if(a.user_id is null,b.user_id,a.user_id),
+if(a.device_id is null,b.device_id,a.device_id),
+if(a.mobile is null,b.mobile,a.mobile),
+if(b.device_id is not null,b.bb,a.aa),
+'nal' as country_code,
+'${pt}' as dt
+from (
+select  
+        common.user_id user_id,
+        common.device_id device_id,
+        common.user_number mobile,
+        max(`timestamp`) aa
+    from opay_source.client_event
+    where dt<date_sub('${pt}', 1) or (dt=date_sub('${pt}', 1) and hour < 23) and common.device_id!=''
+    group by common.user_id,common.device_id,common.user_number
+    ) a
+full join
+(select
+        common.user_id user_id,
+        common.device_id device_id,
+        common.user_number mobile,
+        max(`timestamp`) bb
+    from opay_source.client_event
+    where (dt = '${pt}' and hour < 23) or (dt=date_sub('${pt}', 1) and hour = 23) and common.device_id!=''
+    group by common.user_id,common.device_id,common.user_number
+) b
+on a.device_id=b.device_id;
+
+
+set mapred.max.split.size=1000000;
+    set hive.exec.dynamic.partition.mode=nonstrict;
+    set hive.exec.parallel=true;
+    insert overwrite table {db}.{table} partition(country_code,dt)
+    select 
+    if(a.user_id is null,b.user_id,a.user_id),
+    if(a.device_id is null,b.device_id,a.device_id),
+    if(a.mobile is null,b.mobile,a.mobile),
+    if(b.device_id is not null,b.bb,a.`timestamp`),
+    'nal' as country_code,
+    '{pt}' as dt
+    from 
+    (select * from 
+    opay_dw.app_opay_user_device_d 
+    where dt=date_sub('{pt}',1)
+    ) a
+    full join
+    (select
+        common.user_id user_id,
+        common.device_id device_id,
+        common.user_number mobile,
+        max(`timestamp`) bb
+    from opay_source.client_event
+    where (dt = '{pt}' and hour < 23) or (dt=date_sub('{pt}', 1) and hour = 23) and common.device_id!=''
+    group by common.user_id,common.device_id,common.user_number
+    ) b
+    on a.device_id=b.device_id;
+
+
+dwm_oride_passenger_base_df
+最好用变量来替换，不要用函数，依赖前一天的时候。看上面的代码
+
+select * 
+from oride_dw.dwm_oride_passenger_base_df
+where dt='{bef_yes_day}') yes_dwm_user
+
+format(
+        pt=ds,
+        bef_yes_day=airflow.macros.ds_add(ds, -1),
+        table=table_name,
+        db=db_name
+103.
+desc formatted ods_binlog_base_betting_topup_record_hi
+104.
+insert overwrite table app_opay_user_device_d partition(country_code,dt)
+select 
+if(a.user_id is null,b.user_id,a.user_id),
+if(a.device_id is null,b.device_id,a.device_id),
+if(a.mobile is null,b.mobile,a.mobile),
+if(b.device_id is not null,b.bb,a.aa),
+'nal' as country_code,
+'${pt}' as dt
+from(
+select rt user_id,
+t device_id,
+y mobile,
+u aa
+from(
+    select  user_id rt,
+             device_id t,
+             mobile y,
+             aa u
+    from(
+        select  
+            common.user_id user_id,
+            common.device_id device_id,
+            common.user_number mobile,
+            `timestamp` aa,
+            row_number() over(partition by common.user_id,common.device_id order by `timestamp` desc) ff
+        from opay_source.client_event
+        where dt<date_sub('${pt}', 1) or (dt=date_sub('${pt}', 1) and hour < 23) and common.device_id!=''
+        --group by common.user_id,common.device_id
+        
+    ) c where c.ff=1
+) ac
+)a
+full join
+(
+    select user_id,
+        device_id,
+         mobile,
+             bb 
+    from(
+        select
+            common.user_id user_id,
+            common.device_id device_id,
+            common.user_number mobile,
+            `timestamp` bb,
+            row_number() over(partition by common.user_id,common.device_id order by `timestamp` desc) ff
+        from opay_source.client_event
+        where (dt = '${pt}' and hour < 23) or (dt=date_sub('${pt}', 1) and hour = 23) and common.device_id!=''
+       -- group by common.user_id,common.device_id
+    ) c
+    where c.ff=1
+
+)b
+on a.device_id=b.device_id and a.user_id=b.user_id;
+
+105.
+
+订单记录表
+dt=29号
+查create_time 有27，28，29   因为采集是create_time=29 or updated_time=29
+
+106.
+mysql -h 10.52.80.112 -P 3318 -udw_read_only -py^n#^qk3
+在cdh集群上
+107.
+select
+count(distinct order_no),sum(actual_pay_amount)
+from  ods_binlog_base_betting_topup_record_hi 
+where concat_ws(' ',dt,hour) BETWEEN '2019-12-28 23' AND '2019-12-29 23'
+and order_status='SUCCESS'
+
+或者
+
+select
+count(distinct order_no),sum(actual_pay_amount)
+from  ods_binlog_base_betting_topup_record_hi 
+where (dt='2019-12-28' and hour=23) or (dt='2019-12-29' and hour<23)
+and order_status='SUCCESS'
+
+(dt = '{pt}' and hour < 23) or (dt=date_sub('{pt}', 1) and hour = 23)
+
+108.
+select count(1),sum(if(status in(4,5),1,0))
+ from (SELECT *,
+             (t.create_time - 8 * 60 * 60 * 1) as local_create_time,
+
+             row_number() over(partition by t.id order by t.`__ts_ms` desc) as order_by
+
+        FROM oride_dw_ods.ods_binlog_base_data_order_hi t
+
+        WHERE concat_ws(' ',dt,hour) BETWEEN '2019-12-27 23' AND '2019-12-28 23' --取昨天1天数据与今天早上00数据
+
+        AND from_unixtime((t.create_time - 8 * 60 * 60 * 1),'yyyy-MM-dd') = '2019-12-28'
+        
+         ) t1
+where t1.`__deleted` = 'false' and t1.order_by = 1
+and city_id<>999001 and driver_id<>0;
+这个是oride 订单的校验方式，你先参考一下。我验证没有问题，在告诉你
+
+
+binlog表的去重逻辑
+select 
+from_unixtime(local_create_time,'yyyy-MM-dd-HH'),
+count(1),
+count(distinct(if(status in (4,5),id,null)))
+from 
+(
+select 
+t.*,
+(t.create_time - 8 * 60 * 60 * 1) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id order by t.`__ts_ms` desc) as order_by
+from 
+oride_dw_ods.ods_binlog_base_data_order_hi t 
+where concat_ws(' ',dt,hour) BETWEEN '2019-12-22 00' AND '2019-12-23 01'
+) t where t.`__deleted` = 'false' and t.order_by = 1 
+) tt
+group by from_unixtime(local_create_time,'yyyy-MM-dd-HH')
+;
+你需要改动的地方只有两个，一个是你需要验证的时候，业务时间戳的选择，
+还有一个就是hour字段是utc时间落地的，这个时间也是你自己来设置，其他的去重逻辑不用动，
+然后去重之后你就可以做一些指标验证的计算了
+
+109.
+insert overwrite table app_opay_user_device_d partition(country_code,dt)
+select 
+if(a.user_id is null,b.user_id,a.user_id),
+if(a.device_id is null,b.device_id,a.device_id),
+if(a.mobile is null,b.mobile,a.mobile),
+if(b.device_id is not null,b.bb,a.`timestamp`),
+'nal' as country_code,
+'{pt}' as dt
+from(
+    select * from 
+    opay_dw.app_opay_user_device_d 
+    where dt=date_sub('{pt}',1)
+)a
+full join
+(
+    select user_id,
+        device_id,
+         mobile,
+             bb 
+    from(
+        select
+            common.user_id user_id,
+            common.device_id device_id,
+            common.user_number mobile,
+            `timestamp` bb,
+            row_number() over(partition by common.user_id,common.device_id order by `timestamp` desc) ff
+        from opay_source.client_event
+        where (dt = '{pt}' and hour < 23) or (dt=date_sub('{pt}', 1) and hour = 23) and common.device_id!=''
+       -- group by common.user_id,common.device_id
+    ) c
+    where c.ff=1
+
+)b
+on a.device_id=b.device_id and a.user_id=b.user_id;
+
+
+110.
+betting_topup_record 验证12月29日 交易成功订单数、订单金额 
+口径：create_time BETWEEN date_format(date_sub('2019-12-29', 1), 'yyyy-MM-dd 23') 
+AND date_format('2019-12-29', 'yyyy-MM-dd 23'
+order_status='SUCCESS'
+
+select count(*),sum(a) from
+(
+select order_no,sum(actual_pay_amount) a
+from opay_dw_ods.ods_sqoop_base_betting_topup_record_di
+where create_time BETWEEN date_format(date_sub('2019-12-29', 1), 'yyyy-MM-dd 23') 
+AND date_format('2019-12-29', 'yyyy-MM-dd 23')
+and order_status='SUCCESS'
+and dt='2019-12-29'
+group by order_no
+) b
+;
+--94254 5505648080
+
+select count(*),sum(actual_pay_amount)
+from opay_dw_ods.ods_sqoop_base_betting_topup_record_di
+where create_time BETWEEN date_format(date_sub('2019-12-29', 1), 'yyyy-MM-dd 23') 
+AND date_format('2019-12-29', 'yyyy-MM-dd 23')
+and order_status='SUCCESS'
+and dt='2019-12-29'
+;
+--94254 5505648080
+
+111.
+ALTER TABLE app_oride_act_user_cohort_d  SET TBLPROPERTIES('comment' = '留存（天）');
+ALTER TABLE app_oride_act_user_cohort_d CHANGE COLUMN day_create_date day_create_date int
+COMMENT '一年中的第几天';
+
+112.
+,'nal' as country_code
+,'{pt}' as dt
+from
+  (select id,name,leader_id from  opos_dw_ods.ods_sqoop_base_bd_admin_users_df where dt = '{pt}' and job_id = 2) hcm
+full join
+  (select nvl(cm.leader_id,0) as leader_id,nvl(cm.id,0) as cm_id,nvl(cm.name,'-') as cm_name,nvl(level3.rm_id,0) as rm_id,nvl(level3.rm_name,'-') as rm_name,nvl(level3.bdm_id,0) as bdm_id,nvl(level3.bdm_name,'-') as bdm_name,nvl(level3.bd_id,0) as bd_id,nvl(level3.bd_name,'-') as bd_name from
+    (select id,name,leader_id from  opos_dw_ods.ods_sqoop_base_bd_admin_users_df where dt = '{pt}' and job_id = 3) cm
+  full join
+    (select nvl(rm.leader_id,0) as leader_id,nvl(rm.id,0) as rm_id,nvl(rm.name,'-') as rm_name,nvl(level4.bdm_id,0) as bdm_id,nvl(level4.bdm_name,'-') as bdm_name,nvl(level4.bd_id,0) as bd_id,nvl(level4.bd_name,'-') as bd_name from
+      (select id,name,leader_id from  opos_dw_ods.ods_sqoop_base_bd_admin_users_df where dt = '{pt}' and job_id = 4) rm
+    full join
+      (select nvl(bdm.leader_id,0) as leader_id,nvl(bdm.id,0) as bdm_id,nvl(bdm.name,'-') as bdm_name,nvl(bd.id,0) as bd_id,nvl(bd.name,'-') as bd_name from
+        (select id,name,leader_id from  opos_dw_ods.ods_sqoop_base_bd_admin_users_df where dt = '{pt}' and job_id = 6) bd
+      full join
+        (select id,name,leader_id from  opos_dw_ods.ods_sqoop_base_bd_admin_users_df where dt = '{pt}' and job_id = 5) bdm
+      on bdm.id=bd.leader_id) as level4
+    on rm.id=level4.leader_id) as level3
+  on cm.id=level3.leader_id) as level2
+on hcm.id=level2.leader_id;
+
+113.
+case
+when created_at<'{before_45_day}' and s.receipt_id is null then '1'
+when created_at<'{before_45_day}' and s.receipt_id is not null then '0'
+when created_at>='{before_45_day}' and created_at<='{pt}' then '0'
+else '1'
+end as shop_silent_flag
+
+
+case a when b then 0   注意与上面的区别，这里是等于吗？
+       when c then 1
+       when d then 2
+
+114.
+
+--01.先求出本周有多少用户
+with
+sender_id as (
+  select
+  concat(
+  case 
+  when create_week=1 and cast(substr(dt,-2) as int)>8 then cast(cast(substr(dt,0,4) as int)+1 as string)
+  when create_week=53 and cast(substr(dt,-2) as int)<8 then cast(cast(substr(dt,0,4) as int)-1 as string)
+  else substr(dt,0,4)
+  end
+  ,lpad(create_week,2,'0') 
+  ) as combine_year_week 
+  ,city_id
+  ,sender_id
+  from
+  opos_dw.dwd_pre_opos_payment_order_di
+  where
+  country_code='nal' 
+  and dt>='{pt}'
+  and dt<='{after_6_day}'
+  and trade_status='SUCCESS'
+  group by
+  concat(
+  case 
+  when create_week=1 and cast(substr(dt,-2) as int)>8 then cast(cast(substr(dt,0,4) as int)+1 as string)
+  when create_week=53 and cast(substr(dt,-2) as int)<8 then cast(cast(substr(dt,0,4) as int)-1 as string)
+  else substr(dt,0,4)
+  end
+  ,lpad(create_week,2,'0') 
+  )
+  ,city_id
+  ,sender_id
+),
+
+--02.再求首单用户
+first_order_sender_id as (
+  select
+  concat(
+  case 
+  when create_week=1 and cast(substr(dt,-2) as int)>8 then cast(cast(substr(dt,0,4) as int)+1 as string)
+  when create_week=53 and cast(substr(dt,-2) as int)<8 then cast(cast(substr(dt,0,4) as int)-1 as string)
+  else substr(dt,0,4)
+  end
+  ,lpad(create_week,2,'0') 
+  ) as combine_year_week 
+  ,city_id
+  ,sender_id
+  from
+  opos_dw.dwd_pre_opos_payment_order_di
+  where
+  country_code='nal' 
+  and dt>='{pt}'
+  and dt<='{after_6_day}'
+  and trade_status='SUCCESS'
+  and first_order='1'
+  group by
+  concat(
+  case 
+  when create_week=1 and cast(substr(dt,-2) as int)>8 then cast(cast(substr(dt,0,4) as int)+1 as string)
+  when create_week=53 and cast(substr(dt,-2) as int)<8 then cast(cast(substr(dt,0,4) as int)-1 as string)
+  else substr(dt,0,4)
+  end
+  ,lpad(create_week,2,'0') 
+  )
+  ,city_id
+  ,sender_id
+)
+
+-------------------
+--01.先求出本周有多少用户
+with
+sender_id as (
+  select
+  create_year
+  ,create_month
+  ,city_id
+  ,sender_id
+  from
+  opos_dw.dwd_pre_opos_payment_order_di
+  where
+  country_code='nal' 
+  and dt>='{pt}'
+  and dt<=concat(substr('{pt}',0,7),'-31')
+  and trade_status='SUCCESS'
+  group by
+  create_year
+  ,create_month
+  ,city_id
+  ,sender_id
+),
+
+--02.再求首单用户
+first_order_sender_id as (
+  select
+  create_year
+  ,create_month
+  ,city_id
+  ,sender_id
+  from
+  opos_dw.dwd_pre_opos_payment_order_di
+  where
+  country_code='nal' 
+  and dt>='{pt}'
+  and dt<=concat(substr('{pt}',0,7),'-31')
+  and trade_status='SUCCESS'
+  and first_order='1'
+  group by
+  create_year
+  ,create_month
+  ,city_id
+  ,sender_id
+)
+
+
+
+115
+看dwd_pre_opos_payment_order_di.py
+
+
+116.
+
+SELECT a.user_id AS user_id,
+       uf.mobile AS mobile,
+       count(DISTINCT order_no) AS volume,
+       sum(amount)/100 AS value
+FROM opay_dw_ods.ods_sqoop_base_big_order_di a
+JOIN
+(
+select * from(
+  SELECT *,
+          row_number() over(partition BY user_id ORDER BY update_time DESC) rn
+   FROM opay_dw_ods.ods_sqoop_base_user_di
+   WHERE dt <= '${enddt}' 
+   )
+WHERE rn=1
+)
+  --AND uf.role='${role}'
+  ON a.user_id=uf.user_id
+  AND a.order_status='SUCCESS'
+  AND uf.mobile IN('${users}')
+  AND a.dt BETWEEN '${startdt}' AND '${enddt}'
+GROUP BY a.user_id,
+         uf.mobile
+
+;
+bigint和string比较时会隐式地都转换成double,java中double的精度只有15-16位
+（double可以精确的表示小于2^52=4503599627370496的数字）。
+当数字超过精度的时候就会比较不准确，出现你上面描述的现象。
+建议将string cast(c as bigint)再进行比较。
+
+117.
+mysql -h 10.52.5.219 -P 13309 -uread_only -py^n#^qk3
+
+
+mysql -h 10.52.5.214 -P 13311 -uread_only -py^n#^qk3
+
+查看client_event底层是不是log采集?
+ods采集数据库，ods有时候会少一些字段，ods会额外多一些字段？
+118.
+sqoop采集报错：
+mysql表缺主键
+
+sqoop是apache开源项目,主要用于关系型数据库数据和hdfs数据的相互同步.
+
+主要记录下-m和--split-by参数的使用:
+
+1. 这俩参数一般是放在一起使用
+
+2.-m:表明需要使用几个map任务并发执行
+
+3.--split-by :拆分数据的字段. -m设置为4,数据有100条,sqoop首先会获取拆分字段的最大值,最小值,步长为100/4=25;
+
+那么第一个map执行拆分字段值为(1,25)之间的数据
+
+第二个map执行拆分字段值为(26,50)之间的数据
+
+第三个map执行拆分字段值为(51,75)之间的数据
+
+第四个map执行拆分字段值为(76,100)之间的数据
+
+注意事项:
+1.拆分字段默认为主键
+
+2.拆分字段的数据类型最好为int,如果不是则将-m设置为1,split-by不设置
+
+3.拆分字段的值最好分布均匀,否则会造成数据倾斜的问题
+
+119.
+
+case t1.country
+            when 'NG' then 'NG'
+            when 'NO' then 'NO'
+            when 'GH' then 'GH'
+            when 'BW' then 'BW'
+            when 'GH' then 'GH'
+            when 'KE' then 'KE'
+            when 'MW' then 'MW'
+            when 'MZ' then 'MZ'
+            when 'PL' then 'PL'
+            when 'ZA' then 'ZA'
+            when 'SE' then 'SE'
+            when 'TZ' then 'TZ'
+            when 'UG' then 'UG'
+            when 'US' then 'US'
+            when 'ZM' then 'ZM'
+            when 'ZW' then 'ZW'
+            else 'NG'
+            end as country_code,
+        '{pt}' as dt
+
+120.
+
+
+
+
+一级业务线 （Life Payment 生活缴费/Transfer of Account 转账/Cash to Card 提现/Account Recharge 账户充值）
+
+
+
+
+
+
+select date_format(e.create_time,'yyyy-MM-dd'),hour(e.create_time) as aa,count(*)
+from
+dwd_opay_account_balance_df e where create_time!=null
+group by date_format(e.create_time,'yyyy-MM-dd'),hour(e.create_time)
+limit 10;
+
+
+
+#!/bin/bash
+for tt in dwd_opay_account_balance_df dwd_opay_cash_to_card_record_di
+do
+hive -e "use opay_dw;select date_format(e.create_time,'yyyy-MM-dd'),hour(e.create_time) as aa,count(*)
+from
+${tt} e where create_time!=null
+group by date_format(e.create_time,'yyyy-MM-dd'),hour(e.create_time);" >> ${tt}_tables.txt
+done
+
+
+
+
+
+airflow backfill -x --rerun_failed_tasks -s 2019-12-01 -e 2019-12-20 dwd_opay_client_event_base_di
+
+
+

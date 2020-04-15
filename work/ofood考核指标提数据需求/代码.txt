@@ -1,0 +1,156 @@
+
+
+ with a as (select 
+            bd.dt dt,
+            bd.id bd_id,
+            bd.name bd_name,
+            bdm.id bdm_id,
+            bdm.name bdm_name,
+            hbdm.id hbdm_id,
+            hbdm.name hbdm_name,
+            f.uid fuid
+            from 
+            (
+                select 
+                id,
+                name,
+                leader_id,
+                dt
+                from 
+                ofood_dw_ods.ods_sqoop_bd_bd_admin_users_df 
+                where job_id = 4 and date_format(dt,'yyyy-MM')='2019-09'
+            ) bd 
+            left join 
+            (
+                select 
+                id,
+                name,
+                leader_id
+                from 
+                ofood_dw_ods.ods_sqoop_bd_bd_admin_users_df 
+                where job_id = 3 and date_format(dt,'yyyy-MM')='2019-09'
+            ) bdm on bd.leader_id = bdm.id
+            left join (
+                select 
+                id,
+                name,
+                leader_id
+                from 
+                ofood_dw_ods.ods_sqoop_bd_bd_admin_users_df
+                where job_id = 2 and date_format(dt,'yyyy-MM')='2019-09'
+            ) hbdm on bdm.leader_id = hbdm.id
+            left join (
+                select 
+                uid
+                from 
+                ofood_dw_ods.ods_sqoop_bd_bd_bd_fence_df
+            ) f on f.uid = bd.id and date_format(dt,'yyyy-MM')='2019-09'
+            group by bd.dt,bd.id,bd.name,bdm.id,bdm.name,hbdm.id,hbdm.name,f.uid
+        ),
+
+ b as(
+select b.dt,b.uid uid,count(distinct uid) bb
+from
+(
+select uid,dt,line from
+(
+select uid,dt,
+from_unixtime(min(dateline),'yyyy-MM-dd') line
+from
+ofood_dw_ods.ods_sqoop_base_jh_order_df
+where dt<'2019-10-01' and order_status=8
+group by uid,dt
+) a
+where a.line>='2019-09-01'
+)b group by b.dt,uid
+),
+c as(
+select origin.dt,origin.uid uid,count(distinct origin.order_id) cc from
+(
+select *
+from ofood_dw_ods.ods_sqoop_base_jh_order_df
+where order_status<0 and pay_status!=0 
+) origin
+join
+(
+select log_id,order_id
+from ofood_dw_ods.ods_sqoop_base_jh_order_log_df
+where 'from'='shop' and status=-1 
+) logg
+on origin.order_id=logg.order_id
+group by origin.dt,origin.uid
+having date_format(dt,'yyyy-MM')='2019-09'
+),
+d as(
+select origin.dt,origin.uid uid,count(distinct origin.order_id) dd from
+(
+select *
+from ofood_dw_ods.ods_sqoop_base_jh_order_df
+where order_status<0 and pay_status!=0 and refund_status!=0
+) origin
+join
+(
+select log_id,order_id
+from ofood_dw_ods.ods_sqoop_base_jh_order_log_df
+where 'from'='system' and status=-1 
+) logg
+on origin.order_id=logg.order_id
+group by origin.dt,uid
+having date_format(dt,'yyyy-MM')='2019-09'
+)
+
+select a.dt,concat(bd_id,'_',bd_name),concat(bdm_id,'_',bdm_name),concat(hbdm_id,'_',hbdm_name),
+b.bb,c.cc,d.dd
+from a left join b on a.fuid=b.uid
+left join c on b.uid=c.uid
+left join d on c.uid=d.uid
+
+
+=================================================================================================================================
+
+
+select a.dt,concat(bd_id,'_',bd_name),concat(bdm_id,'_',bdm_name),concat(hbdm_id,'_',hbdm_name),
+nvl(b.bb,0),nvl(c.cc,0),nvl(d.dd,0)
+from a left join b on a.fuid=b.uid
+left join c on b.uid=c.uid
+left join d on c.uid=d.uid
+
+
+
+
+
+
+select a.dt,a.uid uid,count(distinct uid) bb
+from
+(
+select uid,dt,
+from_unixtime(min(dateline),'yyyy-MM-dd') line
+from
+ofood_dw_ods.ods_sqoop_base_jh_order_df
+where dt<'2019-10-01' and order_status=8
+group by uid,dt
+) a
+where a.line=a.dt and a.dt>='2019-09-01'
+group by a.dt,uid
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

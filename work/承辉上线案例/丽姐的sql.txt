@@ -1,0 +1,34 @@
+select dri.city,
+       dri.driver_type,
+       dri.know_orider,
+       count(1) as submit_num,  --提交资料的人数
+       sum((if(live.live_status is not null,1,0))) as prima_audit_num, --初审人数
+       sum((if(live.live_status=1,1,0))) as appoint_num, --预约人数
+       sum((if(dri.status=2,1,0))) as audit_finish_num, --审核通过人数
+       count(distinct (if(dri.status=2,dri.driver_id,null))) as audit_finish_driver_num, --审核通过人数
+       sum((if(dri.know_orider=7 and dri.know_orider_extend is not null,1,0))) as lead_by_old_driver_num,
+       dri.dt
+from (select *       
+from oride_dw_ods.ods_sqoop_mass_rider_signups_df
+where dt='${pt}' and know_orider in(7,13,14)) dri
+left join 
+(select * from oride_dw_ods.ods_sqoop_base_rider_apply_live_info_df
+where dt='${pt}' and live_status in(1,2)) live
+on dri.id=live.rider_id
+group by dri.city,
+       dri.driver_type,
+       dri.know_orider,
+       dri.dt
+
+
+
+
+
+960817Ls.
+oride_dw_ods.ods_sqoop_base_rider_apply_live_info_df
+oride_dw.dwd_oride_rider_signups_df
+oride_dw.dwm_oride_order_base_di 
+oride_dw.dim_oride_city 
+oride_dw.dim_oride_country_base
+
+

@@ -1,0 +1,113 @@
+betting_topup_record 验证12月29日 交易成功订单数、订单金额 
+口径：create_time BETWEEN date_format(date_sub('2019-12-29', 1), 'yyyy-MM-dd 23') 
+AND date_format('2019-12-29', 'yyyy-MM-dd 23'
+order_status='SUCCESS'
+
+select count(*),sum(actual_pay_amount)
+from opay_dw_ods.ods_sqoop_base_betting_topup_record_di
+where create_time BETWEEN date_format(date_sub('2019-12-29', 1), 'yyyy-MM-dd 23') 
+AND date_format('2019-12-29', 'yyyy-MM-dd 23')
+and order_status='SUCCESS'
+and dt='2019-12-29'
+;
+--94254	5505648080
+
+
+select
+count(*),
+sum(actual_pay_amount)
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000 + 60 * 60 * 1) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_betting_topup_record_hi t 
+where concat_ws(' ',dt,hour) BETWEEN '2019-12-28 23' AND '2019-12-29 23'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt--97373	5583073990
+where tt.order_status='SUCCESS'--75084	4409298950
+and from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd') = '2019-12-29'
+;--72858	4360644650
+
+
+
+                                                   
+opay_dw_ods.ods_sqoop_base_betting_topup_record_di   94254（12月29日交易成功订单数）	5505648080（12月29日订单金额）
+opay_dw_ods.ods_binlog_base_betting_topup_record_hi  72858（12月29日交易成功订单数）	4360644650（12月29日订单金额）
+
+opay_dw.dwd_opay_transaction_record_di                    57355(1小时订单数)
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi  41197(1小时订单数)
+
+
+opay_dw.dwd_opay_transaction_record_di 
+
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi 
+
+
+--验证7号  8-9小时数据
+select 
+count(distinct order_no)
+from
+opay_dw.dwd_opay_transaction_record_di
+where create_time BETWEEN date_format('2020-01-07', 'yyyy-MM-dd 07') 
+AND date_format('2020-01-07', 'yyyy-MM-dd 08') --58292
+and update_time BETWEEN date_format('2020-01-07', 'yyyy-MM-dd 07') 
+AND date_format('2020-01-07', 'yyyy-MM-dd 08') --57355
+;
+
+
+
+select
+--from_unixtime(local_create_time,'yyyy-MM-dd HH'),
+count(distinct order_no)
+from
+(
+select 
+t.*,
+ (cast(t.create_time as bigint)/1000 + 60 * 60 * 1) as local_create_time
+from 
+(
+select 
+t.*,
+row_number() over(partition by t.id,t.`__table` order by t.`__ts_ms` desc) as order_by
+from 
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi t
+where concat_ws(' ',dt,hour) BETWEEN '2020-01-07 07' AND '2020-01-07 08'
+) t where t.`__deleted` = 'false' and t.order_by = 1
+) tt--110836
+where from_unixtime(cast(local_create_time as bigint),'yyyy-MM-dd HH:mm:ss') 
+BETWEEN '2020-01-07 08' AND '2020-01-07 09'
+
+--41197
+;
+
+
+
+
+
+opay_dw.dwd_opay_transaction_record_di 
+
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi 
+
+opay_account.accounting_request_record  账户事务记录表；（分表汇总）
+1 验证dwd_opay_transaction_record_di每日增量订单数 和
+accounting_request_record小时级增量表一天的订单数是否一致
+
+opay_dw_ods.dwd_opay_transaction_record_di 
+
+opay_dw_ods.ods_binlog_base_accounting_request_record_hi 
+
+-----------------------------------------------------------------
+
+ods_binlog_base_accounting_request_record_hi
+ods_binlog_base_user_order_hi
+ods_binlog_base_account_user_record_hi
+
+
+

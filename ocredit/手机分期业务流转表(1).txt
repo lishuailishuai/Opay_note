@@ -1,0 +1,77 @@
+
+----业务流转报表（Business_flow_statement）
+select x.date `统计时间`,x1.`进件总数`,x1.`策略通过`,x1.`策略拒绝`,x1.`策略通过率`,x1. `信审复审通过`,x1.`信审拒绝`,x1.`信审通过率`,
+x2.`签约成功件数`,x2. `合同金额`,x2.`待签件数`,x2.`签约失败`,x2.`签约率`,x3.`放款件数`,x3.`放款金额`,x3.`放款件数`/x1.`进件总数` as `业务转化率`,x4.`总应还笔数`,x4.`总未还笔数`,x4.`总应还金额`,x4.`总未还款金额`,x4.`总逾期率`
+from 
+
+(select * from 
+(SELECT DATE_FORMAT(DATE_SUB(NOW(), INTERVAL xc day), '%Y-%m-%d') as date
+FROM ( 
+			SELECT @xi:=@xi+1 as xc from 
+			(SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) xc1, 
+			(SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) xc2, 
+			(SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) xc3,
+				(SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) xc4,
+			(SELECT @xi:=0) xc0 
+) xcxc) k where k.date>='2019-12-23') x
+left join 
+(select DATE_FORMAT(from_unixtime(UNIX_TIMESTAMP(a.create_time)+3600),'%Y-%m-%d') dt,
+count(distinct a.order_id)`进件总数`,
+count(distinct case when a.risk_status=1  then a.order_id else null end ) `策略通过` ,
+count(distinct case when a.risk_status=0  then a.order_id else null end ) `策略拒绝` ,
+count(distinct case when a.risk_status=1  then a.order_id else null end )/(count(distinct case when a.risk_status=1  then a.order_id else null end )+count(distinct case when a.risk_status=0  then a.order_id else null end )) `策略通过率`,
+count(distinct case when a.order_status not in (10,11,12,13,30,32,99) then a.order_id else null end ) `信审复审通过` ,
+count(distinct case when a.order_status in (12,32) then a.order_id else null end ) `信审拒绝` ,
+count(distinct case when a.order_status not in (10,11,12,13,30,32,99) then a.order_id else null end )/(count(distinct case when a.order_status not in (10,11,12,13,30,32,99) then a.order_id else null end )+count(distinct case when a.order_status in (12,32) then a.order_id else null end )) `信审通过率`
+from oloan.t_order a
+group by DATE_FORMAT(from_unixtime(UNIX_TIMESTAMP(a.create_time)+3600),'%Y-%m-%d')) x1
+on x.date=x1.dt
+left join
+(select DATE_FORMAT(from_unixtime(UNIX_TIMESTAMP(a.create_time)+3600),'%Y-%m-%d') dt1,
+count(distinct case when a.contract_status  in (2,4,5) then a.order_id else null end ) `签约成功件数` ,
+round(sum(case when a.contract_status  in (2,4,5) then a.loan_amount else null end )/100,2)  `合同金额` ,
+count(distinct case when a.contract_status  in (0,1) then a.order_id else null end ) `待签件数` ,
+count(distinct case when a.contract_status  = 3 then a.order_id else null end ) `签约失败` ,
+count(distinct case when a.contract_status  in (2,4,5) then a.order_id else null end )/(count(distinct case when a.contract_status  in (0,1,2,3,4,5) then a.order_id else null end )) `签约率` 
+from oloan.t_contract a
+group by DATE_FORMAT(from_unixtime(UNIX_TIMESTAMP(a.create_time)+3600),'%Y-%m-%d')) x2
+on x.date=x2.dt1
+left join
+(select DATE_FORMAT(from_unixtime(UNIX_TIMESTAMP(a.create_time)+3600),'%Y-%m-%d') dt2,
+count(distinct case when a.order_status=81 then a.order_id else null end ) `放款件数` ,
+round((sum(case when a.order_status=81 then a.loan_amount else null end ))/100,2) `放款金额`  from oloan.t_order a
+group by DATE_FORMAT(from_unixtime(UNIX_TIMESTAMP(a.create_time)+3600),'%Y-%m-%d')) x3
+on x.date=x3.dt2
+left join
+(select DATE_FORMAT(from_unixtime(UNIX_TIMESTAMP(a.repayment_time)+3600),'%Y-%m-%d') dt3, 
+count(distinct a.order_id) `总应还笔数`,
+count(distinct case when a.current_repayment_status in (0,1,2) then a.order_id else null end) `总未还笔数`,
+round(sum(a.month_total_amount)/100,2)  `总应还金额`,
+round(sum(case when a.current_repayment_status  in (1,2) then a.month_total_amount  else null end )/100,2) `总未还款金额`,
+count(distinct case when a.current_repayment_status in (0,1,2) then a.order_id else null end)/count(distinct a.order_id) `总逾期率`
+from oloan.t_repayment_detail a
+where a.business_type =0
+group by DATE_FORMAT(from_unixtime(UNIX_TIMESTAMP(a.repayment_time)+3600),'%Y-%m-%d')) x4
+on x.date=x4.dt3
+
+--还款全表(total_repayment)
+select DATE_FORMAT(from_unixtime(UNIX_TIMESTAMP(a.repayment_time)+3600),'%Y-%m-%d') dt3, 
+count(distinct case when current_repayment_status in (1,2,3) then a.order_id else null end)+ count(distinct case when datediff(curdate(),date(repayment_time))=0 and
+current_repayment_status=0 then  a.order_id else null end) `截止当日应还笔数`,
+count(distinct case when current_repayment_status in (1,2) then a.order_id else null end)+ count(distinct case when datediff(curdate(),date(repayment_time))=0 and
+current_repayment_status=0 then  a.order_id else null end) `截止当日未还笔数`,
+round(( ifnull(sum(case when current_repayment_status in (1,2,3) then a.month_total_amount else null end),0)+ifnull(sum(case when datediff(curdate(),date(repayment_time))=0 and
+current_repayment_status=0 then  a.month_total_amount else null end),0))/100,2)  `截止当日应还金额`,
+round((ifnull(sum(case when current_repayment_status in (1,2) then a.month_total_amount else null end),0)+ifnull(sum(case when datediff(curdate(),date(repayment_time))=0 and
+current_repayment_status=0 then  a.month_total_amount else null end),0))/100,2)  `截止当日未还金额`,
+(count(distinct case when current_repayment_status in (1,2) then a.order_id else null end)+ count(distinct case when datediff(curdate(),date(repayment_time))=0 and
+current_repayment_status=0 then  a.order_id else null end))/(count(distinct case when current_repayment_status in (1,2,3) then a.order_id else null end)+ count(distinct case when datediff(curdate(),date(repayment_time))=0 and
+current_repayment_status=0 then  a.order_id else null end)) `截止当日逾期率`,
+count(distinct a.order_id) `总应还笔数`,
+count(distinct case when a.current_repayment_status in (1,2) then a.order_id else null end) `总未还笔数`,
+round(sum(a.month_total_amount)/100,2)  `总应还金额`,
+round(sum(case when a.current_repayment_status  in (1,2) then a.month_total_amount  else null end )/100,2) `总未还款金额`,
+count(distinct case when a.current_repayment_status in (1,2) then a.order_id else null end)/count(distinct a.order_id) `总逾期率`
+from oloan.t_repayment_detail a
+where a.business_type =0
+group by DATE_FORMAT(from_unixtime(UNIX_TIMESTAMP(a.repayment_time)+3600),'%Y-%m-%d')

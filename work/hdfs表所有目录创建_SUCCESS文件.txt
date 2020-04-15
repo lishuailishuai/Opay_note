@@ -1,0 +1,71 @@
+命令可以参考调度上
+oride_dw.dwd_oride_order_base_include_test_di_s3a 表的所有目录下，添加一下 _SUCCESS
+
+查看表在hdfs中的存储目录(会显示location选项)
+hive> show create table test_table; 
+
+LOCATION
+  's3a://opay-bi/oride/oride_dw/dwd_oride_order_base_include_test_di'
+
+hdfs dfs -ls s3a://opay-bi/oride/oride_dw/dwd_oride_order_base_include_test_di/country_code=GH/dt=2019-11-24
+                                                                                              /.............
+                                                                              /country_code=NG/dt=2019-11-24
+                                                                              /.............................
+
+本地测试： 处理06-15----06-16数据
+#!/bin/bash
+arr=("GH" "NG" "nal")
+location=/root/oo
+
+for value in ${arr[@]}
+start=2019-06-15
+end=2019-06-17
+do
+   while [ "$start" != "$end" ]
+   do
+   touch $location/country_code=$value/dt=$start/_SUCCESS
+   start=`date -d "+1 day ${start}" +%Y-%m-%d`
+   done
+done
+
+
+线上执行：   处理06-15----12-01数据
+#!/bin/bash
+arr=("GH" "NG" "nal")
+location=s3a://opay-bi/oride/oride_dw/dwd_oride_order_base_include_test_di
+
+
+for value in ${arr[@]}
+start=2019-06-15
+end=2019-12-02
+do
+
+   while [ "$start" != "$end" ]
+   do
+   hadoop fs -touchz $location/country_code=$value/dt=$start/_SUCCESS
+   echo $start
+   start=`date -d "+1 day ${start}" +%Y-%m-%d`
+   done
+done
+
+
+看下面这个吧
+
+#!/bin/bash
+arr=("NG")
+location=oss://opay-datalake/opay/opay_dw/dim_opay_user_base_di
+start=2019-09-21
+end=2019-12-27
+
+for value in ${arr[@]}
+do
+
+   while [ "$start" != "$end" ]
+   do
+   hadoop fs -touchz $location/country_code=$value/dt=$start/_SUCCESS
+   echo $start
+   start=`date -d "+1 day ${start}" +%Y-%m-%d`
+   done
+done
+
+

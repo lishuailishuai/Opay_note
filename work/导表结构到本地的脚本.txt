@@ -1,0 +1,14 @@
+#！/bin/bash
+DATABASES='opay_dw opos_dw'
+for DATABASE in ${DATABASES}
+do
+hive -e "use ${DATABASE}; show tables;" > ${DATABASE}_tables.txt
+sleep 1
+cat ${DATABASE}_tables.txt | while read eachline
+do
+hive -e "use ${DATABASE};show create table ${eachline};" >> ${DATABASE}_tables.txt
+echo ";" >> ${DATABASE}_tables.txt
+done
+done
+
+导表结构到本地

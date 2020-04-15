@@ -1,0 +1,343 @@
+
+为什么增量表数据一样？
+为什么要加1小时，而且是创建时间？
+增量表的依据是哪些字段？
+
+
+这就是针对丢数据的排查过程 只是我们基础设施跟不上 最终转换为工程就是那两天sql的思路
+针对mysql和ods层表数据
+对数过程解决问题：保证从mysql采集到ods,不会丢失数据
+hive的sql与mysql的sql,看看为什么那样去写，逻辑是什么
+
+mysql> select create_time from user limit 10;
++---------------------+
+| create_time   mysql中类型：datetime    hue中是string  |
++---------------------+
+| 2019-09-21 13:55:55 |
+| 2019-09-21 21:15:30 |
+| 2019-09-22 00:04:17 |
+| 2019-09-22 00:04:17 |
+
+date_add(create_time, interval 1 hour).  	加一小时      interval间隔
+https://blog.csdn.net/arkblue/article/details/51860327  
+
+select date_add('2019-09-11',1) hue中  日期string
+
+
+ods与mysql表结构一样，包括字段，字段类型稍微有点偏差,ods多了分区字段，dt
+mysql中的数据是唯一的，最终状态的。
+
+mysql和ods，user_id去重数据量是一样的。
+
+
+mysql> select * from user  where user_id='156619082600988200' ;
++----+--------------------+----------------+---------------+------------+-------------+---------+-----------+---------------------+-----+-----+--------+---------+-------+------+---------+-----+----------+---------------+---------------+--------------+---------------------+---------------------+-----------------+
+| id | user_id            | mobile         | business_name | first_name | middle_name | surname | kyc_level | kyc_update_time     | bvn | dob | gender | country | state | city | address | lga | role     | referral_code | referrer_code | notification | create_time         | update_time         | register_client |
++----+--------------------+----------------+---------------+------------+-------------+---------+-----------+---------------------+-----+-----+--------+---------+-------+------+---------+-----+----------+---------------+---------------+--------------+---------------------+---------------------+-----------------+
+|  3 | 156619082600988200 | +2347067277082 |               | emmanuel   |             | Elshit  | 1         | 2019-09-22 00:03:47 |     |     |        | Nigeria |       |      |         |     | customer | 38VO9WA       |               |              | 2019-09-22 00:04:17 | 2019-11-15 08:02:26 | App             |
++----+--------------------+----------------+---------------+------------+-------------+---------+-----------+---------------------+-----+-----+--------+---------+-------+------+---------+-----+----------+---------------+---------------+--------------+---------------------+---------------------+-----------------+
+1 row in set (0.10 sec)
+
+
+select * from  ods_sqoop_base_user_di where user_id='156619082600988200'。 增量表
+
+ods_sqoop_base_user_di.id	ods_sqoop_base_user_di.user_id	ods_sqoop_base_user_di.mobile	ods_sqoop_base_user_di.business_name	ods_sqoop_base_user_di.first_name	ods_sqoop_base_user_di.middle_name	ods_sqoop_base_user_di.surname	ods_sqoop_base_user_di.kyc_level	ods_sqoop_base_user_di.kyc_update_time	ods_sqoop_base_user_di.bvn	ods_sqoop_base_user_di.dob	ods_sqoop_base_user_di.gender	ods_sqoop_base_user_di.country	ods_sqoop_base_user_di.state	ods_sqoop_base_user_di.city	ods_sqoop_base_user_di.address	ods_sqoop_base_user_di.lga	ods_sqoop_base_user_di.role	ods_sqoop_base_user_di.referral_code	ods_sqoop_base_user_di.referrer_code	ods_sqoop_base_user_di.notification	ods_sqoop_base_user_di.create_time	ods_sqoop_base_user_di.update_time	ods_sqoop_base_user_di.register_client	ods_sqoop_base_user_di.dt
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-15
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-09-22
+
+
+
+
+
+select * from  ods_sqoop_base_user_df where user_id='156619082600988200' order by dt  全量表
+
+创建时间全部一样，更新时间在dt=2019-11-15之后不一样。   dt=2019-11-15之前，更新时间一样。  2019-09-22 00:04:17.0
+                                                  dt=2019-11-15之前，更新时间不一样   2019-11-15 08:02:26.0
+ods_sqoop_base_user_df.id	ods_sqoop_base_user_df.user_id	ods_sqoop_base_user_df.mobile	ods_sqoop_base_user_df.business_name	ods_sqoop_base_user_df.first_name	ods_sqoop_base_user_df.middle_name	ods_sqoop_base_user_df.surname	ods_sqoop_base_user_df.kyc_level	ods_sqoop_base_user_df.kyc_update_time	ods_sqoop_base_user_df.bvn	ods_sqoop_base_user_df.dob	ods_sqoop_base_user_df.gender	ods_sqoop_base_user_df.country	ods_sqoop_base_user_df.state	ods_sqoop_base_user_df.city	ods_sqoop_base_user_df.address	ods_sqoop_base_user_df.lga	ods_sqoop_base_user_df.role	ods_sqoop_base_user_df.referral_code	ods_sqoop_base_user_df.referrer_code	ods_sqoop_base_user_df.notification	ods_sqoop_base_user_df.create_time	ods_sqoop_base_user_df.update_time	ods_sqoop_base_user_df.register_client	ods_sqoop_base_user_df.dt
+1100881	156619082600988200	+2347014374093						2019-09-05 14:20:47.0									customer	3806DOT			2019-09-05 14:20:49.0	2019-09-09 09:37:37.0	NULL	2019-09-19
+1100881	156619082600988200	+2347014374093						2019-09-05 14:20:47.0									customer	3806DOT			2019-09-05 14:20:49.0	2019-09-09 09:37:37.0	NULL	2019-09-20
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-09-21
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-09-22
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-09-23
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-09-24
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-09-25
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-09-26
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-09-27
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-09-28
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-09-29
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-09-30
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-01
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-02
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-03
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-04
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-05
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-06
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-07
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-08
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-09
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-10
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-11
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-12
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-13
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-14
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-15
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-16
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-17
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-18
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-19
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-20
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-21
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-22
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-23
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-24
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-25
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-26
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-27
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-28
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-29
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-30
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-10-31
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-01
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-02
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-03
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-04
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-05
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-06
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-08
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-09
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-10
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-11
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-12
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-13
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0									customer	38VO9WA			2019-09-22 00:04:17.0	2019-09-22 00:04:17.0	NULL	2019-11-14
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-15
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-16
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-17
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-18
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-19
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-20
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-21
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-22
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-23
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-24
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-25
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-26
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-27
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-28
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-29
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	NULL	2019-11-30
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	App	2019-12-01
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	App	2019-12-02
+3	156619082600988200	+2347067277082		emmanuel		Elshit	1	2019-09-22 00:03:47.0				Nigeria					customer	38VO9WA			2019-09-22 00:04:17.0	2019-11-15 08:02:26.0	App	2019-12-03
+
+
+
+对比user表：
+	
+	登陆mysql：在第一台机器上执行
+		mysql -h 10.52.80.112 -P 3321 -udw_read_only -py^n#^qk3
+		use opay_user;
+		show tables;
+	查询mysql：
+		select count(*) from user where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-10'; --6120060
+	查询hive：
+		select count(distinct user_id) from ods_sqoop_base_user_di where dt <= '2019-12-10' --6120060
+
+交易业务表：
+	登陆mysql：
+		mysql -h 10.52.80.112 -P 3316 -udw_read_only -py^n#^qk3
+		use opay_transaction;
+		show tables;
+
+	user_transfer_user_record 查询mysql:
+		select count(*) from user_transfer_user_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; -- 10689860
+	user_transfer_user_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_user_transfer_user_record_di where dt <= '2019-12-11' --10689860
+
+	merchant_transfer_user_record 查询mysql:
+		select count(*) from merchant_transfer_user_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; -- 4536597
+	merchant_transfer_user_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_merchant_transfer_user_record_di  where dt <= '2019-12-11' -- 4536597
+
+	Cash In查询mysql：
+		select count(*) from cash_in_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --1024139
+	Cash In查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_cash_in_record_di  where dt <= '2019-12-11' --1024139	
+
+	Cash Out查询mysql：
+		select count(*) from cash_out_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --196690
+	Cash Out查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_cash_out_record_di  where dt <= '2019-12-11' -- 196690
+
+
+	OPos查询mysql：
+		select count(*) from business_collection_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; -- 1338922
+	OPos查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_business_collection_record_di  where dt <= '2019-12-11' --1338922 	
+
+11111111111111111111
+	merchant_acquiring_record 查询mysql：
+		select count(*) from merchant_acquiring_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --27260259
+	merchant_acquiring_record查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_merchant_acquiring_record_di  where dt <= '2019-12-11' -- 27260259
+
+	tv_topup_record 查询mysql：
+		select count(*) from tv_topup_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --431558
+	tv_topup_record查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_tv_topup_record_di  where dt <= '2019-12-11' -- 431558
+
+
+	airtime_topup_record 查询mysql：
+		select count(*) from airtime_topup_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --9559872
+	airtime_topup_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_airtime_topup_record_di  where dt <= '2019-12-11' -- 9559872	
+
+	electricity_topup_record 查询mysql：
+		select count(*) from electricity_topup_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --66547
+	electricity_topup_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_electricity_topup_record_di  where dt <= '2019-12-11' -- 66547
+
+
+	betting_topup_record 查询mysql：
+		select count(*) from betting_topup_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --1279098
+	betting_topup_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_betting_topup_record_di  where dt <= '2019-12-11' -- 1279098	
+222222222222222222.   33333333e333
+	mobiledata_topup_record 查询mysql：
+		select count(*) from mobiledata_topup_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --518703
+	mobiledata_topup_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_mobiledata_topup_record_di  where dt <= '2019-12-11' -- 518703
+
+
+	user_transfer_card_record 查询mysql：
+		select count(*) from user_transfer_card_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --12631686
+	user_transfer_card_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_user_transfer_card_record_di  where dt <= '2019-12-11' 	-- 12631686
+	
+	merchant_transfer_card_record 查询mysql：
+		select count(*) from merchant_transfer_card_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --72826
+	merchant_transfer_card_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_merchant_transfer_card_record_di  where dt <= '2019-12-11' --72826
+	
+	user_receive_money_record 查询mysql：
+		select count(*) from user_receive_money_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --1851179
+	user_receive_money_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_user_receive_money_record_di  where dt <= '2019-12-11' --1851179
+	
+	merchant_receive_money_record 查询mysql：
+		select count(*) from merchant_receive_money_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --741
+	merchant_receive_money_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_merchant_receive_money_record_di  where dt <= '2019-12-11' --741	
+	3333333333333333333
+	user_pos_transaction_record 查询mysql：
+		select count(*) from user_pos_transaction_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --7553850
+	user_pos_transaction_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_user_pos_transaction_record_di  where dt <= '2019-12-11' -- 7553850
+	
+	merchant_pos_transaction_record 查询mysql：
+		select count(*) from merchant_pos_transaction_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --2073
+	merchant_pos_transaction_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_merchant_pos_transaction_record_di  where dt <= '2019-12-11' -- 2073
+	
+	-----
+	user_topup_record 查询mysql：
+		select count(*) from user_topup_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --11340743
+	user_topup_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_user_topup_record_di  where dt <= '2019-12-11' -- 11340743	
+	
+	merchant_topup_record 查询mysql：
+		select count(*) from merchant_topup_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --1536408
+	merchant_topup_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_merchant_topup_record_di  where dt <= '2019-12-11' --1536408 
+
+	user_easycash_record 查询mysql：
+		select count(*) from user_easycash_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --13620
+	user_easycash_record 查询hive：
+		select count(distinct order_no) from opay_dw_ods.ods_sqoop_base_user_easycash_record_di  where dt <= '2019-12-11' --13620 
+
+
+
+mysql -h 10.52.80.112 -P 3322 -udw_read_only -py^n#^qk3
+show databases;
+use opay_merchant;
+
+opay_dw.dwd_opay_merchant_acquiring_record_di 
+dwd_opay_merchant_pos_transaction_record_di
+dwd_opay_merchant_receive_money_record_di
+dwd_opay_merchant_topup_record_di
+dwd_opay_merchant_transfer_card_record_di
+dwd_opay_merchant_transfer_user_record_di
+
+1
+mysql
+select count(*) from merchant_acquiring_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --
+hive
+select count(distinct order_no) from opay_dw.dwd_opay_merchant_acquiring_record_di  where dt <= '2019-12-11' -- 
+
+2
+mysql
+select count(*) from merchant_pos_transaction_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --
+hive
+select count(distinct order_no) from opay_dw.dwd_opay_merchant_pos_transaction_record_di  where dt <= '2019-12-11' -- 
+
+
+
+3.
+mysql
+select count(*) from merchant_receive_money_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --
+hive
+select count(distinct order_no) from opay_dw.dwd_opay_merchant_receive_money_record_di  where dt <= '2019-12-11' -- 
+
+
+4
+mysql
+select count(*) from merchant_topup_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --
+hive
+select count(distinct order_no) from opay_dw.dwd_opay_merchant_topup_record_di  where dt <= '2019-12-11' -- 
+
+5.
+mysql
+select count(*) from merchant_transfer_card_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --
+hive
+select count(distinct order_no) from opay_dw.dwd_opay_merchant_transfer_card_record_di  where dt <= '2019-12-11' -- 
+
+6
+mysql
+select count(*) from merchant_transfer_user_record where date_format(date_add(create_time, interval 1 hour),'%Y-%m-%d') <= '2019-12-11'; --
+hive
+select count(distinct order_no) from opay_dw.dwd_opay_merchant_transfer_card_record_di  where dt <= '2019-12-11' -- 
+
+
+
+
+
+
+
+
+商户表
+hive
+
+select max(create_time) from ods_sqoop_base_merchant_df 
+
+
+select count(distinct merchant_id) from
+ods_sqoop_base_merchant_df  
+where dt <= '2019-12-11' 
+1252
+
+select count(merchant_id) from
+ods_sqoop_base_merchant_df  
+where dt <= '2019-12-12'
+1252
+
+只能多不能少
+
+
+
+mysql
+
+create_time<
+
+
+
+

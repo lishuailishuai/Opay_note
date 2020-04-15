@@ -1,0 +1,28 @@
+邮箱：shuai01.li@opay-inc.com    960817Ls.
+opay wiki: https://confluence.opayride.com/pages/viewpage.action?pageId=14025853  shuai01.li  opay
+http://hue.datalake.o-pay.in/hue/useradmin/users  shuai.li  opay
+ ssh -p 2222 shuai01.li@jms.ssh.opayride.com     960817Ls.
+ hue.  shuai.li  opay
+ 开机：0817
+ 下载。apple id 密码：960817Ls
+ task调度。960817Ls.     shuai01.li
+ vcs密码：940706Bo.       shuai01.li
+
+sudo -i
+. /data/venv/bin/activate
+
+
+新hue 4：
+shuai01.li
+960817Ls.
+
+
+邮箱：shuai01.li@opay-inc.com    960817Ls.
+opay wiki: https://confluence.opayride.com/pages/viewpage.action?pageId=14025853  shuai01.li  opay
+http://hue.datalake.o-pay.in/hue/useradmin/users  shuai.li  opay
+ ssh -p 2222 shuai01.li@jms.ssh.opayride.com     960817Ls.
+ hue.  shuai.li  opay
+ 开机：0817
+ 下载。apple id 密码：960817Ls
+ task调度。960817Ls.     shuai01.li
+ vcs密码：940706Bo.       shuai01.li

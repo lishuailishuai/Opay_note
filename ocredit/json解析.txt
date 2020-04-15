@@ -1,0 +1,799 @@
+
+
+select * from ods_sqoop_base_data_driver_score_activity_conf_df limit 1
+bigint      id	1
+tinyint     serv_type	2
+bigint      country_id	999
+string      city_ids	[1005,1007,1006]
+tinyint     status	1
+string      first_order_score	{"enable":1,"extra_score_for_new_pax":0,"first_order_score":{"1":10,"2":20,"3":20,"4":20,"5":20,"6":20,"7":20}}
+string      low_value_order_score	{"enable":1,"pick_dist_limit":2,"score":10}
+string      finish_order_score	{"enable":1,"rush_hour":[{"start_time":21600,"end_time":32399,"score":20},{"start_time":57600,"end_time":71999,"score":20}],"non_rush_hour":{"score":10}}
+string      driver_duty_cancel_score	{"enable":1,"neg_score":60}
+int         created_at	1578712124
+int         updated_at	1583133190
+tinyint     tag	1
+int         grab_score	2
+string      dt	2020-03-01
+
+
+
+===========================================================================
+select
+b
+from
+ods_sqoop_base_t_order_df 
+lateral view explode(split(regexp_extract('[1005,1007,1006]','^\\[(.+)\\]$',1),',')) aa as b--符合Py语法，但是在py中解析不出来，下面可以
+ --lateral view explode(split(substr(city_ids,2,length(city_ids)-2),',')) city as city_id
+where dt='2020-02-12'
+limit 10
+
+互不影响(多个 lateral)
+
+
+--下面 解析json数组  但在py中需要两个{{来表示一个{,造成符合py语法，但是在hive中查不出数据了，最终使用from_json来解析json数组
+--但是我感觉那个用{{进行python大括号转义符合python的语法，但是最终sql要在hive执行，两个{{是查不出来的，因为sql字符串中只有一个{
+
+
+--实际上是：lateral view json_tuple(e,'start_time','end_time','score') ff as start_time,end_time,score
+--获取不到，导致整个sql都没有数据
+select username,ai.id,ai.age,p.uname,p.code from test1 
+lateral view json_tuple(actioninfo,'id','age','partlist') ai as id,age,partlist
+lateral view explode(split(regexp_replace(regexp_extract(partlist,'^\\[(.+)\\]$',1),'\\}\\,\\{', '\\}\\|\\|\\{'),'\\|\\|')) partlist as p
+lateral view json_tuple(p,'code','uname') p as code,uname
+
+
+
+
+select
+regexp_replace('ss}}b','\\}','')--ssb
+
+select
+regexp_replace('ss}b','\\}}','')--ss}b
+
+select
+regexp_replace('ss}}b','\\\\}','')--ss}}b
+
+
+select
+regexp_replace('ss}}b','\\\\}}','')--ss}}b
+
+
+select
+regexp_replace('ss}}b','ddd','')--ss}}b
+
+解析不出来，原样返回
+
+
+select size(split('2,3,4',','))--获取数组长度
+get_json_object不管字段有没有，获取不到不会报错，只会返回null
+
+
+
+select split('dssd','w')--["dssd"]
+
+=============================================================================
+
+
+
+1.     oride_dw_ods.ods_sqoop_base_data_driver_score_activity_conf_df
+============
+
+          select
+          id,--'无业务含义主键'
+          serv_type,--'服务类型'
+          country_id,--'国家ID'
+          city_id,--城市ID
+          status,--状态 0:废弃 1:开启
+          aa.enable,--每日首单积分状态
+          aa.extra_score_for_new_pax,--每日首单额外积分
+          get_json_object(aa.first_order_score,'$.1'),--每日首单首日积分
+          get_json_object(aa.first_order_score,'$.2'),--每日首单2日积分
+          get_json_object(aa.first_order_score,'$.3'),--每日首单3日积分
+          get_json_object(aa.first_order_score,'$.4'),--每日首单4日积分
+          get_json_object(aa.first_order_score,'$.5'),--每日首单5日积分
+          get_json_object(aa.first_order_score,'$.6'),--每日首单6日积分
+          get_json_object(aa.first_order_score,'$.7'),--每日首单7日积分
+          cc.enable,--差单状态
+          cc.pick_dist_limit,--差单得分的接驾距离最低限制
+          cc.score,--接驾距离超过最低限制的差单所得积分
+          dd.enable,--完单积分状态
+          ff.start_time,--高峰期完单的开始时间
+          ff.end_time,--高峰期完单的结束时间
+          ff.score,--高峰期完单，每单得的积分
+          gg.score,--非高峰期完单，每单得的积分
+          hh.enable,--骑手有责拒单状态
+          hh.neg_score,--骑手拒单，每单减的积分
+          from_unixtime(created_at),--创建时间
+          from_unixtime(updated_at),--更新时间
+          tag,--骑手标签
+          grab_score--枪单积分
+          from
+          oride_dw_ods.ods_sqoop_base_data_driver_score_activity_conf_df
+          lateral view explode(split(regexp_extract(city_ids,'^\\[(.+)\\]$',1),',')) city as city_id
+          --lateral view explode(split(substr(city_ids,2,length(city_ids)-2),',')) city as city_id
+          lateral view json_tuple(first_order_score,'enable','extra_score_for_new_pax','first_order_score') aa as enable,extra_score_for_new_pax,first_order_score
+          --lateral view json_tuple(first_order_score,'1','2','3','4','5','6','7') bb as one,two,three,four,five,six,seven
+          lateral view json_tuple(low_value_order_score,'enable','pick_dist_limit','score') cc as enable,pick_dist_limit,score
+          lateral view json_tuple(finish_order_score,'enable','rush_hour','non_rush_hour') dd as enable,rush_hour,non_rush_hour
+          lateral view explode(split(regexp_replace(regexp_extract(rush_hour,'^\\[(.+)\\]$',1),'\\}\\,\\{', '\\}\\|\\|\\{'),'\\|\\|')) ee as e
+          lateral view json_tuple(e,'start_time','end_time','score') ff as start_time,end_time,score
+          lateral view json_tuple(non_rush_hour,'score') gg as score
+          lateral view json_tuple(driver_duty_cancel_score,'enable','neg_score') hh as enable,neg_score
+
+
+
+
+
+
+
+
+
+
+CREATE EXTERNAL TABLE oride_dw.dwd_oride_driver_score_activity_conf_df(  
+id bigint comment '无业务含义主键',
+serv_type tinyint comment '服务类型',
+country_id bigint comment '国家ID',
+city_id bigint comment '城市ID',
+status tinyint comment '状态 0:废弃 1:开启',
+first_order_score_enable tinyint comment '每日首单积分状态',
+first_order_score_extra bigint comment '每日首单额外积分',
+first_order_score_1 bigint comment '每日首单首日积分',
+first_order_score_2 bigint comment '每日首单2日积分',
+first_order_score_3 bigint comment '每日首单3日积分',
+first_order_score_4 bigint comment '每日首单4日积分',
+first_order_score_5 bigint comment '每日首单5日积分',
+first_order_score_6 bigint comment '每日首单6日积分',
+first_order_score_7 bigint comment '每日首单7日积分',
+low_value_order_score_enable tinyint comment '差单状态',
+low_value_order_score_dist bigint comment '差单得分的接驾距离最低限制',
+low_value_order_score bigint comment '接驾距离超过最低限制的差单所得积分',
+finish_order_score_enable tinyint comment '完单积分状态',
+finish_order_rush_start bigint comment '高峰期完单的开始时间',
+finish_order_rush_end bigint comment '高峰期完单的结束时间',
+finish_order_rush_score bigint comment '高峰期完单，每单得的积分',
+finish_order_non_rush_score bigint comment '非高峰期完单，每单得的积分',
+driver_cancel_score_enable tinyint comment '骑手有责拒单状态',
+driver_cancel_score_neg_score bigint comment '骑手拒单，每单减的积分',
+created_time string comment '创建时间',
+updated_time string comment '更新时间',
+tag tinyint comment '骑手标签',
+grab_score int comment '枪单积分'
+)
+COMMENT '骑手积分活动配置表'  
+PARTITIONED BY (   
+country_code string COMMENT '二位国家码',
+dt string COMMENT '分区时间'
+)
+STORED AS orc  
+LOCATION  
+ 'oss://opay-datalake/oride/oride_dw/dwd_oride_driver_score_activity_conf_df'
+TBLPROPERTIES (  
+'orc.compress'='SNAPPY'
+);
+
+
+
+
+
+
+=============
+
+
+
+
+
+
+
+
+2.     oride_dw_ods.ods_sqoop_base_data_driver_score_reward_conf_df
+============
+
+select * from oride_dw_ods.ods_sqoop_base_data_driver_score_reward_conf_df limit 1
+
+
+										
+[{"use_type":[6],"option":[{"driver_tag":1,"rewards":[{"start":210,"end":99999,"reward":700}]},
+                           {"driver_tag":2,"rewards":[{"start":120,"end":99999,"reward":500}]},
+                           {"driver_tag":3,"rewards":[{"start":70,"end":999999,"reward":100}]}
+                          ]
+}]
+
+
+id          int      1
+country_id  bigint   999
+name        string   北京司机分层奖励
+serv_type   tinyint  2
+city_id     string   999001
+rules       string   [{"use_type":[6],"option":[{"driver_tag":1,"rewards":[{"start":210,"end":99999,"reward":700}]},{"driver_tag":2,"rewards":[{"start":120,"end":99999,"reward":500}]},{"driver_tag":3,"rewards":[{"start":70,"end":999999,"reward":100}]}]}]
+start_time  int      1578697200
+end_time    int      1578783600
+status      tinyint  1
+created_at  int      1578711889
+updated_at  int      1578726446
+dt          string   2020-03-01
+
+
+
+CREATE TEMPORARY FUNCTION from_json AS 'brickhouse.udf.json.FromJsonUDF';
+
+select
+          id,
+          country_id,
+          name,
+          serv_type,
+          city_id,
+          bb.use_type,
+          ccc.driver_tag,
+          ccc.rewards[0]["start"],
+          ccc.rewards[0]["end"],
+          ccc.rewards[0]["reward"],
+          from_unixtime(start_time),
+          from_unixtime(end_time),
+          status,
+          from_unixtime(created_at),
+          from_unixtime(updated_at)
+          from 
+          oride_dw_ods.ods_sqoop_base_data_driver_score_reward_conf_df
+          lateral view json_tuple(substr(rules,2,length(rules)-2),'use_type','option') aa as use_type,option
+          lateral view explode(split(substr(use_type,2,length(use_type)-2),',')) bb as use_type
+          LATERAL VIEW EXPLODE(from_json(option,array(named_struct("driver_tag",cast(1 as bigint),"rewards",array(map("",1)))))) cc AS ccc
+
+
+
+
+
+
+select
+       
+          ccc.rewards
+          from 
+          oride_dw_ods.ods_sqoop_base_data_driver_score_reward_conf_df
+          lateral view json_tuple(substr(rules,2,length(rules)-2),'use_type','option') aa as use_type,option
+          lateral view explode(split(substr(use_type,2,length(use_type)-2),',')) bb as use_type
+          LATERAL VIEW EXPLODE(from_json(option,array(named_struct("driver_tag",cast(1 as bigint),"rewards",array(map("",1)))))) cc AS ccc
+
+
+返回[{"reward":200,"start":140,"end":9999999}] 
+
+
+
+
+          
+
+
+select
+id,
+country_id,
+name,
+serv_type,
+city_id,
+bb.use_type,
+dd.driver_tag,
+ee.startt,--ee.`start`
+ee.endd,--ee.`end`
+ee.reward,
+from_unixtime(start_time),
+from_unixtime(end_time),
+status,
+from_unixtime(created_at),
+from_unixtime(updated_at)
+from 
+oride_dw_ods.ods_sqoop_base_data_driver_score_reward_conf_df
+lateral view json_tuple(regexp_extract(rules,'^\\[(.+)\\]$',1),'use_type','option') aa as use_type,option
+lateral view explode(split(regexp_extract(use_type,'^\\[(.+)\\]$',1),',')) bb as use_type
+lateral view explode(split(regexp_replace(regexp_extract(option,'^\\[(.+)\\]$',1),'\\}\\,\\{', '\\}\\|\\|\\{'),'\\|\\|')) cc as c
+--lateral view explode(split(regexp_replace(option,'\\},\\{','\\}\\},\\{'),'\\},')) dd as ddd
+--在转义的时候，\\{  \\|   逗号，是不需要进行转义的。
+lateral view json_tuple(c,'driver_tag','rewards') dd as driver_tag,rewards
+lateral view json_tuple(regexp_extract(rewards,'^\\[(.+)\\]$',1),'start','end','reward') ee as startt,endd,reward
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE EXTERNAL TABLE oride_dw.dwd_oride_driver_score_reward_conf_df(  
+id int comment '无业务含义主键',
+country_id bigint comment '国家ID(后台开国用)',
+name string comment '名称',
+serv_type tinyint comment '车辆类型',
+city_id string comment '城市ID列表',
+rules_use_type bigint comment '奖励规则的生效天数',
+rules_driver_tag bigint comment '奖励规则的司机分层',
+rules_rewards_start bigint comment '奖励规则的起点积分',
+rules_rewards_end bigint comment '奖励规则的结束积分',
+rules_rewards_reward bigint comment '按照奖励规则分到的奖励',
+start_time string comment '开始时间',
+end_time string comment '结束时间',
+status tinyint comment '状态 0 废弃 1 开启',
+created_at string comment '创建时间',
+updated_at string comment '更新时间'
+)
+COMMENT '骑手积分奖励配置表'  
+PARTITIONED BY (   
+country_code string COMMENT '二位国家码',
+dt string COMMENT '分区时间'
+)
+STORED AS orc  
+LOCATION  
+ 'oss://opay-datalake/oride/oride_dw/dwd_oride_driver_score_reward_conf_df'
+TBLPROPERTIES (  
+'orc.compress'='SNAPPY'
+);
+
+
+
+
+=============
+
+
+
+
+
+
+
+
+
+
+3.           oride_dw_ods.ods_sqoop_base_data_driver_rights_conf_df
+============
+
+
+
+[{"driver_level":5,"s_proportion":0,"e_proportion":0.1,"type_rules":[{"type":1,"type_proportion":0.1}]},
+{"driver_level":4,"s_proportion":0.1,"e_proportion":0.3,"type_rules":[{"type":1,"type_proportion":0.1}]},
+{"driver_level":3,"s_proportion":0.3,"e_proportion":0.6,"type_rules":[{"type":1,"type_proportion":0.1}]},
+{"driver_level":2,"s_proportion":0.6,"e_proportion":0.9,"type_rules":[{"type":1,"type_proportion":0.1}]},
+{"driver_level":1,"s_proportion":0.9,"e_proportion":1,"type_rules":[{"type":1,"type_proportion":0.2}]
+}]	
+
+
+
+
+[{"driver_level":1,"type_rules":[{"type":1,"type_proportion":0.1}]}]
+
+
+id               int       1
+serv_type        tinyint   2
+city_id          string    [1005,1006,999001]
+start_time       int       1582239600
+end_time         int       1583017200
+status           tinyint   1
+driver_rules     string    [{"driver_level":5,"s_proportion":0,"e_proportion":0.1,"type_rules":[{"type":1,"type_proportion":0.1}]},{"driver_level":4,"s_proportion":0.1,"e_proportion":0.3,"type_rules":[{"type":1,"type_proportion":0.1}]},{"driver_level":3,"s_proportion":0.3,"e_proportion":0.6,"type_rules":[{"type":1,"type_proportion":0.1}]},{"driver_level":2,"s_proportion":0.6,"e_proportion":0.9,"type_rules":[{"type":1,"type_proportion":0.1}]},{"driver_level":1,"s_proportion":0.9,"e_proportion":1,"type_rules":[{"type":1,"type_proportion":0.2}]}]		
+new_driver_rules string    [{"driver_level":1,"type_rules":[{"type":1,"type_proportion":0.1}]}]
+dt               string    2020-03-01
+
+
+
+
+
+
+
+select
+          id,
+          serv_type,
+          aa.city_id,
+          from_unixtime(start_time),
+          from_unixtime(end_time),
+          status,
+          bbb.driver_level,
+          bbb.s_proportion,
+          bbb.e_proportion,
+          bbb.type_rules[0]["type"],
+          bbb.type_rules[0]["type_proportion"],
+          ccc.driver_level,
+          ccc.type_rules[0]["type"],
+          ccc.type_rules[0]["type_proportion"]
+          from 
+          oride_dw_ods.ods_sqoop_base_data_driver_rights_conf_df
+          lateral view explode(split(substr(city_id,2,length(city_id)-2),',')) aa as city_id
+          LATERAL VIEW EXPLODE(from_json(driver_rules,array(named_struct("driver_level",cast(1 as bigint),"s_proportion",cast(1 as double),"e_proportion",cast(1 as double),
+          "type_rules",array(map("",1)))))) bb AS bbb
+          LATERAL VIEW EXPLODE(from_json(new_driver_rules,array(named_struct("driver_level",cast(1 as bigint),"type_rules",array(map("",1)))))) cc AS ccc
+          
+
+
+
+
+
+
+CREATE EXTERNAL TABLE oride_dw.dwd_oride_driver_rights_conf_df(  
+id int comment '无业务含义主键',
+serv_type tinyint comment '车型',
+city_id string comment '城市ID',
+start_time string comment '配置开始时间',
+end_time string comment '配置结束时间',
+status tinyint comment '状态1正常 0作废',
+driver_rules_level bigint comment '司机分层',
+driver_rules_s_proportion double comment '司机分层规则的起始占比',
+driver_rules_e_proportion double comment '司机分层规则的结束占比',
+driver_rules_type bigint comment '司机分层规则的抽拥类型',
+driver_rules_type_proportion double comment '司机分层规则的抽拥类型的占比',
+new_driver_rules_level bigint comment '新司机分层',
+new_driver_rules_type bigint comment '新司机分层规则的抽拥类型',
+new_driver_rules_type_proportion double comment '新司机分层规则的抽拥类型的占比'
+)
+COMMENT '司机分层权益配置表'  
+PARTITIONED BY (   
+country_code string COMMENT '二位国家码',
+dt string COMMENT '分区时间'
+)
+STORED AS orc  
+LOCATION  
+ 'oss://opay-datalake/oride/oride_dw/dwd_oride_driver_rights_conf_df'
+TBLPROPERTIES (  
+'orc.compress'='SNAPPY'
+);
+
+
+
+=============
+
+
+
+
+--对于json数组，单个取得话，get_json_object也是可以的
+--下面：注意$.[0]与option[0]的区别
+
+select rules from ods_sqoop_base_data_driver_score_reward_conf_df limit 1
+[{"use_type":[6],"option":[{"driver_tag":1,"rewards":[{"start":210,"end":99999,"reward":700}]},
+{"driver_tag":2,"rewards":[{"start":120,"end":99999,"reward":500}]},
+{"driver_tag":3,"rewards":[{"start":70,"end":999999,"reward":100}]}]}]
+
+
+select get_json_object(rules,'$.[0].option[0].rewards[0].start')
+from ods_sqoop_base_data_driver_score_reward_conf_df 
+where id=1
+
+
+select ff
+from ods_sqoop_base_data_driver_score_reward_conf_df bb
+lateral view explode(split(get_json_object(rules,'$.[0].option'),',')) dd as ff
+where id=1
+
+
+
+select length('[{"sk')--5
+
+
+
+
+select
+regexp_replace(regexp_replace('[{"start_time":21600,"end_time":32399,"score":20},{"start_time":57600,"end_time":71999,"score":20}]',':',':"'),',"','","')
+;--这是可以的哦
+
+
+
+
+
+
+
+
+SELECT
+                get_json_object(message, '$.es')
+            FROM
+                oride_source.opay_ep_logv1
+            WHERE
+                dt='2020-03-13'
+                limit 1
+
+
+
+[{"en":"net_type_UNKNOWN","et":"1584057552398","lat":"","lng":"","cid":"ngKano","cip":"","bzp":"COMMON","ev":{"net_type":"Unknown"}},
+{"en":"splash_page_show","et":"1584057554340","lat":"","lng":"","cid":"ngKano","cip":"","bzp":"COMMON","ev":{"param_splash_img_show":"splash_img_show"}},
+{"en":"COMMON_splash_show_error","et":"1584057554564","lat":"","lng":"","cid":"ngKano","cip":"","bzp":"COMMON","ev":{"networkType":"","networkState":"false","telecomsOperatorId":"62120","response":"OTHER"}},
+{"en":"welcomeback_show","et":"1584057577975","lat":"","lng":"","cid":"ngKano","cip":"10.245.234.136","bzp":"COMMON","ev":{"page":"welcome back"}},
+{"en":"welcomeback_pin_show","et":"1584057577994","lat":"","lng":"","cid":"ngKano","cip":"10.245.234.136","bzp":"COMMON","ev":{"page":"welcome back"}},
+{"en":"welcomeback_pin_authorize_show","et":"1584057595914","lat":"","lng":"","cid":"ngKano","cip":"10.245.234.136","bzp":"COMMON","ev":{"page":"welcome back"}},
+{"en":"welcomeback_authorize_click","et":"1584057595949","lat":"","lng":"","cid":"ngKano","cip":"10.245.234.136","bzp":"COMMON","ev":{"page":"welcome back"}}]
+
+
+
+
+
+
+LATERAL VIEW explode(split(regexp_replace(regexp_replace(get_json_object(msg, '$.es'), '\\\\]|\\\\[',''),'\\\\}}\\,\\\\{{','\\\\}}\\;\\\\{{'),'\\\\;')) es AS e
+
+
+
+在python中，一个}需要两个}},并且，需要4个\\\\,就可以了，在sql中它会自动的变成\\}
+也就成功解析了。
+
+
+
+
+count(*)=count(1)  常数
+
+
+不管tttid存在不存在，运行都不会报错，只不过返回的是Null
+select 
+get_json_object(message, '$.tttid')
+from
+oride_source.opay_ep_logv1
+where  dt='2020-03-14'
+limit 2
+
+
+select 
+count(*) from
+oride_source.opay_ep_logv1 LATERAL VIEW explode(split(regexp_replace(regexp_replace(get_json_object(message, '$.es'), '\\]|\\[',''),'\\}\\,\\{','\\}\\;\\{'),'\\;')) es AS e
+where  dt='2020-03-14'
+and get_json_object(e, '$.bzp') in ('OPAY','HOME_MORE','CASHIN','CASHOUT','MYQR','QRSCAN','QR_COUPON','AJIRA','ADD_MONEY','BETTING','EASYCASH','ELECTRICITY','NEARBY_AGENT','PAYBILLPAYBILL_BANKING','PAYBILL_TV','PAYBILL_V2','TRANSFER','TV','VOUCHER','WATER','APPLICATION_MARKET','TRANSFER_MONEY','COMMON','SCAN_TO_PAY','MY_CODE','MERCHANT_AUTH','GROUPBY','EDUCATION','AIRTIME_DATA','SECURITY','REFER_FRIEND','REPORT_SCAM','ADD_CARD'
+) OR get_json_object(e, '$.bzp') is null 
+and get_json_object(message, '$.tid')='46a3a02a-dfc2-4761-9cc2-20abbbf69ce9'
+--9511403  为什么这么多，是因为select后执行的，后面先执行，先进行展开
+
+还有这里的限制条件and get_json_object(message, '$.tid')='46a3a02a-dfc2-4761-9cc2-20abbbf69ce9'不管用
+所以有or的话，只能写两个条件，不能再写
+
+
+没有聚合函数，group by表字段必须全部 ，除非常量，比如null也是常量
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+select * from
+oride_source.opay_ep_logv0
+where dt='2020-03-10'
+AND get_json_object(message, '$.type') in ('h5')
+limit 1
+| 2020-03-10T14:45:15.317Z  | {"beat":"filebeat","topic":"opay-ep-logv0","type":"_doc","version":"7.1.0"} | {"type":"h5","msg":"{\"common\":{\"app_name\":\"\",\"app_version\":\"\",\"appsflyer_id\":\"\",\"channel\":\"\",\"client_timestamp\":\"\",\"device_id\":\"\",\"device_manufacturer\":\"\",\"device_model\":\"\",\"device_screen\":\"\",\"gaid\":\"\",\"is_root\":\"\",\"locale\":\"\",\"os_version\":\"\",\"platform\":\"\",\"subchannel\":\"\",\"user_id\":\"\",\"user_number\":\"\"},\"events\":[{\"event_name\":\"view_tasks_on_topic_four_click\",\"event_time\":\"1583851511\",\"event_value\":\"\",\"page\":\"\",\"source\":\"\"}]}","token":"MjoyODY1NToxNTgzMzkwNDIwOTA5NzYzODk2Onl5c1pvMXZLTFVIUkhUeUVSODJ6QVVuR25MdEtBbVFM"} | 2020-03-10        | 14                  |
++---------------------------+----------------
+
+
+
+
+select * from
+oride_source.opay_ep_logv0
+where dt='2020-03-17'
+AND get_json_object(message, '$.type') in ('h5')
+limit 1
+| 2020-03-17T09:16:39.460Z  | {"beat":"filebeat","topic":"opay-ep-logv0","type":"_doc","version":"7.1.0"} | {"type":"h5","msg":"{\"common\":{\"app_name\":\"\",\"app_version\":\"\",\"appsflyer_id\":\"\",\"channel\":\"\",\"client_timestamp\":\"\",\"device_id\":\"\",\"device_manufacturer\":\"\",\"device_model\":\"\",\"device_screen\":\"\",\"gaid\":\"\",\"is_root\":\"\",\"locale\":\"\",\"os_version\":\"\",\"platform\":\"\",\"subchannel\":\"\",\"user_id\":\"\",\"user_number\":\"\"},\"events\":[{\"event_name\":\"invite_a_friend_h5_click\",\"event_time\":\"1584436599\",\"event_value\":\"\",\"page\":\"\",\"source\":\"\"}]}","token":"MToyNDc0OTgyOjE1ODQ0MzY0ODE2ODE5MzM4NDI6enV1YkVMdnlFUEJ2UjFXdVIzNGh3MmxSMmUxZUlSUnQ="} | 2020-03-17        | 09                  |
++---------------------------+-----------------
+
+
+
+
+
+SELECT  get_json_object(event_value ,'$.page') page ,count(*) 
+
+FROM oride_dw.dwd_oride_h5_event_detail_hi 
+
+WHERE  
+
+event_name='passenger_oride_process_show'
+
+and dt  between  '2020-03-17' and '2020-03-17' 
+
+group by get_json_object(event_value ,'$.page')  
+
+order by page;
+
+
+
+SELECT  get_json_object(event_value ,'$.page') page ,count(*) 
+
+FROM oride_source.opay_ep_logv0
+
+WHERE  
+
+event_name='passenger_oride_process_show'
+
+and dt='2020-03-26'
+
+group by get_json_object(event_value ,'$.page')  
+
+order by page;
+
+
+
+
+
+
+with opay_ep_logv0_data as (
+            SELECT
+                get_json_object(message, '$.msg') as msg
+            FROM
+                oride_source.opay_ep_logv0
+            WHERE
+                dt='2020-03-26'
+                AND get_json_object(message, '$.type') in ('h5')
+        )
+        SELECT
+            get_json_object(e.event_value ,'$.page') page ,count(*) 
+
+        FROM
+            opay_ep_logv0_data LATERAL VIEW EXPLODE(from_json(get_json_object(msg, '$.events'), array(named_struct("event_name", "", "event_time","", "event_value","", "page","", "source","")))) es AS e
+        where 
+             e.event_name='passenger_oride_process_show'
+        group by 
+             get_json_object(e.event_value ,'$.page')
+
+
+             +-------+------+
+| page  | _c1  |
++-------+------+
+| NULL  | 42   |
+| 2     | 21   |
+| 4     | 23   |
+| 1     | 54   |
+| 6     | 11   |
++-------+------+
+
+
+
+
+==========
+==========
+=========
+
+
+select * from
+oride_source.opay_ep_logv0
+where dt='2020-03-26'
+AND get_json_object(message, '$.type') in ('h5')
+
+
+
+
+
+select * from
+oride_source.opay_ep_logv0
+limit 100
+
+
+
+
+
+SELECT  get_json_object(event_value ,'$.page') page ,count(*) 
+
+FROM oride_dw.dwd_oride_h5_event_detail_hi 
+
+WHERE  
+
+event_name='passenger_oride_process_show'
+
+and dt='2020-03-26' 
+
+group by get_json_object(event_value ,'$.page')  
+
+order by page;
+
+
+
+
+ent_value\":{\"page\":7},\
+
+；；；；
+;;;;;
+
+
+====================================================
+
+select * from
+oride_source.opay_ep_logv0
+limit 100
+
+"event_value\":\"{}\"   from_json     带双引号的json
+
+
+select * from
+oride_source.opay_ep_logv1
+limit 100
+
+
+"ev": { "state": "false" }   不用from_json   正常json
+
+
+
+1.
+with opay_ep_logv0_data as (
+            SELECT
+                get_json_object(message, '$.msg') as msg
+            FROM
+                oride_source.opay_ep_logv0
+            WHERE
+                dt='2020-03-26'
+                AND get_json_object(message, '$.type') in ('h5')
+        )
+       
+        SELECT
+            get_json_object(e,'$.event_value.page'),count(*)
+        FROM
+            opay_ep_logv0_data
+LATERAL VIEW explode(split(regexp_replace(regexp_replace(get_json_object(msg, '$.events'), '\\]|\\[',''),'\\}\\,\\{','\\}\\;\\{'),'\\;')) es AS e
+group by get_json_object(e,'$.event_value.page')
+
+
+
+
+
+
+2.
+with opay_ep_logv0_data as (
+            SELECT
+                get_json_object(message, '$.msg') as msg
+            FROM
+                oride_source.opay_ep_logv0
+            WHERE
+                dt='2020-03-26'
+                AND get_json_object(message, '$.type') in ('h5')
+        )
+       
+        SELECT
+            get_json_object(e,'$.event_value.page'),count(*)
+        FROM
+            opay_ep_logv0_data
+LATERAL VIEW explode(split(regexp_replace(regexp_replace(get_json_object(msg, '$.events'), '\\\\]|\\[',''),'\\}\\,\\{','\\}\\;\\{'),'\\\\;')) es AS e
+group by get_json_object(e,'$.event_value.page')
+
+
+
+
+1,2的运行结果是一致的。
+
+
+
+
+
+
+with opay_ep_logv0_data as (
+            SELECT
+                get_json_object(message, '$.msg') as msg
+            FROM
+                oride_source.opay_ep_logv0
+            WHERE
+                dt>='2020-03-23' and dt<='2020-03-26'
+                AND get_json_object(message, '$.type') in ('h5')
+        )
+       
+        SELECT
+            get_json_object(e,'$.event_value.page'),count(*)
+        FROM
+            opay_ep_logv0_data
+LATERAL VIEW explode(split(regexp_replace(regexp_replace(get_json_object(msg, '$.events'), '\\\\]|\\[',''),'\\}\\,\\{','\\}\\;\\{'),'\\\\;')) es AS e
+where get_json_object(e,'$.event_value.page') in (5,7,9)
+group by get_json_object(e,'$.event_value.page')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+

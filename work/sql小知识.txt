@@ -1,0 +1,76 @@
+1.weekofyear()  返回日期在当前年的第几周
+select weekofyear('2019-12-09')  50
+
+select weekofyear('2019-11-09') 45
+
+select weekofyear('2019-01-08')  2
+
+select weekofyear('2019-01-07')  2
+
+select weekofyear('2019-01-06')  1
+
+select weekofyear('2018-01-07')  1
+
+2.
+select country,province,city,sum(amount) from table1
+
+group by country,province,city
+grouping sets（country,(country,province),(country,province,city)）
+
+等价于:
+
+select country,null as province,null as city,sum(amount) from table1 group by country
+
+union all
+
+select country,province,null as city,sum(amount) from table1 group by country,province
+
+unon all
+
+select country,province,city,sum(amount) from table1 group by country,province,city
+
+
+https://blog.csdn.net/weixin_37536446/article/details/88552305  看这个，更好，更详细
+
+3.
+时间戳是int类型
+
+4.
+Select aa,'dd' dd from temp group by aa;  常量是不需要写到group by 后面的。
+
+5.
+表中的创建时间和dt不是一回事，往往dt(拿到的时间)>创建时间
+dt也就是采集的时间，而创建时间是业务时间，计算指标要以业务时间为准，dt只是当作常量来进行处理的。
+
+6.
+数据表中添加一个字段的SQL语句写法为：
+
+1、alter table 表名 ADD 字段 类型 NOT NULL Default 0
+
+2、ALTER TABLE employee  ADD  spbh varchar(20) NOT NULL Default 0
+
+3、在表employee 中加入 spbh  类型是varchar大小20 不为空 默认值是0
+
+7.
+Null as 字段。   常量字段为null
+
+8.
+添加分区：
+alter table my_partition_test_table if not exists add partition (p_hour='2017113003', p_city='573', p_loctype='MHA');
+删除分区：
+ALTER TABLE my_partition_test_table DROP IF EXISTS PARTITION (p_loctype='MHA');
+
+9.
+decimal(10,2)中的“2”表示小数部分的位数，如果插入的值未指定小数部分或者小数部分不足两位则会自动补到2位小数，若插入的值小数部分超过了2为则会发生截断，截取前2位小数。
+
+“10”指的是整数部分加小数部分的总长度，也即插入的数字整数部分不能超过“10-2”位，否则不能成功插入，会报超出范围的错误。
+
+10.
+
+
+
+
+
+
+
+
